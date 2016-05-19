@@ -12,6 +12,7 @@
 #include "cameraclass.h"
 #include "modelclass.h"
 #include "textureshaderclass.h"
+#include "bitmapclass.h"
 
 
 /////////////
@@ -43,6 +44,7 @@ private:
 private:
 	D3DClass* m_Direct3D;
 	CameraClass* m_Camera;
+	BitmapClass* m_Bitmap;
 	ModelClass* m_Model;
 	TextureShaderClass* m_TextureShader;
 };
