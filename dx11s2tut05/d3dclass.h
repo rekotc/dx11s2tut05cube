@@ -46,6 +46,15 @@ public:
 
 	void GetVideoCardInfo(char*, int&);
 
+	//necessarie per gestire la texture del mouse e altre
+	//texture applicate a geometrie bidimensionali
+	void TurnZBufferOn();
+	void TurnZBufferOff();
+
+	void EnableAlphaBlending();
+	void DisableAlphaBlending();
+	
+
 private:
 	bool m_vsync_enabled;
 	int m_videoCardMemory;
@@ -61,6 +70,10 @@ private:
 	XMMATRIX m_projectionMatrix;
 	XMMATRIX m_worldMatrix;
 	XMMATRIX m_orthoMatrix;
+	//necessario per gestire texture su geometrie bidimensionali (mouse)
+	ID3D11DepthStencilState* m_depthDisabledStencilState;
+	ID3D11BlendState* m_alphaEnabledBlendState;
+	ID3D11BlendState* m_alphaDisabledBlendState;
 };
 
 #endif

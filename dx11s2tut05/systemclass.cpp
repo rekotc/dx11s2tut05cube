@@ -26,7 +26,7 @@ bool SystemClass::Initialize()
 	int screenWidth, screenHeight;
 	bool result;
 
-
+	m_FrameCounter = 0;
 	// Initialize the width and height of the screen to zero before sending the variables into the function.
 	screenWidth = 0;
 	screenHeight = 0;
@@ -42,7 +42,13 @@ bool SystemClass::Initialize()
 	}
 
 	// Initialize the input object.
-	m_Input->Initialize();
+	m_Input->initialize(m_hwnd, false);
+	/*if (!result)
+	{
+		MessageBox(m_hwnd, L"Could not initialize the input object.", L"Error", MB_OK);
+		return false;
+	}*/
+
 
 	// Create the graphics object.  This object will handle rendering all the graphics for this application.
 	m_Graphics = new GraphicsClass;
@@ -56,7 +62,7 @@ bool SystemClass::Initialize()
 	if(!result)
 	{
 		return false;
-	}
+	}	
 	
 	return true;
 }
@@ -130,16 +136,26 @@ void SystemClass::Run()
 bool SystemClass::Frame()
 {
 	bool result;
+	
+	// Get the location of the mouse from the input object,
+	//m_Input->GetMouseLocation(mouseX, mouseY);
 
+	m_FrameCounter++;
+
+	if (m_FrameCounter == 500){
+
+		m_FrameCounter = m_FrameCounter;
+	}
 
 	// Check if the user pressed escape and wants to exit the application.
-	if(m_Input->IsKeyDown(VK_ESCAPE))
+	if(m_Input->isKeyDown(VK_ESCAPE))
 	{
 		return false;
 	}
+	
 
 	// Do the frame processing for the graphics object.
-	result = m_Graphics->Frame();
+	result = m_Graphics->Frame(m_MouseX,m_MouseY,m_FrameCounter);
 	if(!result)
 	{
 		return false;
@@ -157,7 +173,7 @@ LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam
 		case WM_KEYDOWN:
 		{
 			// If a key is pressed send it to the input object so it can record that state.
-			m_Input->KeyDown((unsigned int)wparam);
+			m_Input->keyDown((unsigned int)wparam);
 			return 0;
 		}
 
@@ -165,9 +181,16 @@ LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam
 		case WM_KEYUP:
 		{
 			// If a key is released then send it to the input object so it can unset the state for that key.
-			m_Input->KeyUp((unsigned int)wparam);
+			m_Input->keyUp((unsigned int)wparam);
 			return 0;
-		}
+		}		
+
+		case WM_INPUT:                          // mouse data in
+			
+			m_Input->readCursorPos(hwnd);
+			m_MouseX = m_Input->getCursorPosX();
+			m_MouseY = m_Input->getCursorPosY();
+			return 0;
 
 		// Any other messages send to the default message handler as our application won't make use of them.
 		default:
@@ -246,14 +269,14 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	// Create the window with the screen settings and get the handle to it.
 	m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_applicationName, m_applicationName, 
 						    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
-						    posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
+							posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
 
 	// Bring the window up on the screen and set it as main focus.
 	ShowWindow(m_hwnd, SW_SHOW);
 	SetForegroundWindow(m_hwnd);
 	SetFocus(m_hwnd);
 
-	// Hide the mouse cursor.
+	//hide the mouse cursor.
 	ShowCursor(false);
 
 	return;
@@ -302,7 +325,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam)
 		{
 			PostQuitMessage(0);		
 			return 0;
-		}
+		}		
 
 		// All other messages pass to the message handler in the system class.
 		default:

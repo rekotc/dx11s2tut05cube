@@ -88,5 +88,6 @@
     <None Include="texture.vs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -37,7 +37,7 @@ public:
 
 	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, int, int, char*, int, int);
 	void Shutdown();
-	bool Render(ID3D11DeviceContext*, int, int);
+	bool Render(ID3D11DeviceContext*, int, int,int);
 
 	int GetIndexCount();
 	ID3D11ShaderResourceView* GetTexture();
@@ -58,6 +58,8 @@ private:
 	int m_screenWidth, m_screenHeight;
 	int m_bitmapWidth, m_bitmapHeight;
 	int m_previousPosX, m_previousPosY;
+
+	int m_FrameCounter;
 };
 
 #endif

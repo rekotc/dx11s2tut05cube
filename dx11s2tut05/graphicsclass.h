@@ -36,7 +36,7 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame();
+	bool Frame(int,int,int);
 
 private:
 	bool Render();
@@ -47,6 +47,9 @@ private:
 	BitmapClass* m_Bitmap;
 	ModelClass* m_Model;
 	TextureShaderClass* m_TextureShader;
+
+	int m_mouseX, m_mouseY;
+	int m_FrameCounter;
 };
 
 #endif

@@ -69,10 +69,11 @@ void BitmapClass::Shutdown()
 }
 
 
-bool BitmapClass::Render(ID3D11DeviceContext* deviceContext, int positionX, int positionY)
+bool BitmapClass::Render(ID3D11DeviceContext* deviceContext, int positionX, int positionY, int framecounter)
 {
 	bool result;
 
+	m_FrameCounter = framecounter;
 
 	// Re-build the dynamic vertex buffer for rendering to possibly a different location on the screen.
 	result = UpdateBuffers(deviceContext, positionX, positionY);
@@ -140,10 +141,12 @@ bool BitmapClass::InitializeBuffers(ID3D11Device* device)
 	}
 
 	// Set up the description of the static vertex buffer.
-    vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	//vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
     vertexBufferDesc.ByteWidth = sizeof(VertexType) * m_vertexCount;
     vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	//vertexBufferDesc.CPUAccessFlags = 0;
     vertexBufferDesc.MiscFlags = 0;
 	vertexBufferDesc.StructureByteStride = 0;
 
@@ -226,6 +229,8 @@ bool BitmapClass::UpdateBuffers(ID3D11DeviceContext* deviceContext, int position
 		return true;
 	}*/
 	
+
+
 	// If it has changed then update the position it is being rendered to.
 	m_previousPosX = positionX;
 	m_previousPosY = positionY;
@@ -241,6 +246,12 @@ bool BitmapClass::UpdateBuffers(ID3D11DeviceContext* deviceContext, int position
 
 	// Calculate the screen coordinates of the bottom of the bitmap.
 	bottom = top - (float)m_bitmapHeight;
+
+	if (m_FrameCounter == 500){
+
+		m_FrameCounter = 0;
+	}
+
 
 	// Create the vertex array.
 	vertices = new VertexType[m_vertexCount];

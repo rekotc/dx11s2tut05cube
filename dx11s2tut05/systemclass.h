@@ -4,6 +4,7 @@
 #ifndef _SYSTEMCLASS_H_
 #define _SYSTEMCLASS_H_
 
+//#include <windows.h> 
 
 ///////////////////////////////
 // PRE-PROCESSING DIRECTIVES //
@@ -50,8 +51,12 @@ private:
 	HINSTANCE m_hinstance;
 	HWND m_hwnd;
 
+	int m_FrameCounter;
+	int m_MouseX, m_MouseY;
+
 	InputClass* m_Input;
 	GraphicsClass* m_Graphics;
+
 };
 
 

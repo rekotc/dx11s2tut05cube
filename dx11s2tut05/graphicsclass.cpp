@@ -78,7 +78,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the bitmap object.
-	result = m_Bitmap->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), screenWidth, screenHeight, "../data/stone01.tga", 32, 32);
+	result = m_Bitmap->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), screenWidth, screenHeight, "../data/mouse.tga", 32, 32);
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
@@ -149,10 +149,12 @@ void GraphicsClass::Shutdown()
 }
 
 
-bool GraphicsClass::Frame()
+bool GraphicsClass::Frame(int x, int y, int framecounter)
 {
 	bool result;
-
+	m_mouseX = x;
+	m_mouseY = y;
+	m_FrameCounter = framecounter;
 
 	// Render the graphics scene.
 	result = Render();
@@ -169,7 +171,7 @@ bool GraphicsClass::Render()
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
 	bool result;
-	int mouseX, mouseY;
+	
 
 	// Clear the buffers to begin the scene.
 	m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
@@ -181,6 +183,7 @@ bool GraphicsClass::Render()
 	m_Direct3D->GetWorldMatrix(worldMatrix);
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
+	//necessaria per rendering 2D
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
 	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
@@ -193,16 +196,21 @@ bool GraphicsClass::Render()
 		return false;
 	}
 
-	// Get the location of the mouse from the input object,
-	//m_Input->GetMouseLocation(mouseX, mouseY);
-	mouseX = 8;
-	mouseY = 16;
+	// Reset the world matrix.
+	m_Direct3D->GetWorldMatrix(worldMatrix);
+
+	// Turn off the Z buffer to begin all 2D rendering.
+	m_Direct3D->TurnZBufferOff();
+	// Turn on alpha blending.
+	m_Direct3D->EnableAlphaBlending();
 	// Render the mouse cursor with the texture shader.
-	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), mouseX, mouseY);  if (!result) { return false; }
+	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), m_mouseX, m_mouseY, m_FrameCounter);  if (!result) { return false; }
 	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
-
-
-
+	
+	// Turn off alpha blending.
+	m_Direct3D->DisableAlphaBlending();
+	// Turn the Z buffer back on now that all 2D rendering has completed.
+	m_Direct3D->TurnZBufferOn();	
 
 	// Present the rendered scene to the screen.
 	m_Direct3D->EndScene();
