@@ -79,7 +79,7 @@ public:
 	void setFixedRotationZ(float);
 
 	XMMATRIX* getRotationMatrix();
-	void setRotationMatrix(XMMATRIX);
+	//void setRotationMatrix(XMMATRIX);
 
 private:
 	bool InitializeBuffers(ID3D11Device*);

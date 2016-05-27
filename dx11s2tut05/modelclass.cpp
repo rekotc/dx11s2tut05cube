@@ -583,7 +583,7 @@ bool ModelClass::LoadModel(char* filename)
 
 	//ora aggiorno i valori limite della boundingBox
 
-	m_boundingBox->BuildBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
+	//m_boundingBox->BuildBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
 
 	return true;
 }

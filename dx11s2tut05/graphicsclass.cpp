@@ -52,7 +52,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);
+	m_Camera->SetPosition(10.0f, 10.0f, -5.0f);
 
 	// Create the model object.
 	m_Model = new ModelClass;
@@ -170,6 +170,7 @@ bool GraphicsClass::Frame(int x, int y, int framecounter)
 bool GraphicsClass::Render()
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
+	XMMATRIX translateMatrix;
 	bool result;
 	
 
@@ -186,19 +187,21 @@ bool GraphicsClass::Render()
 	//necessaria per rendering 2D
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
+	
+	// Translate to the location of the sphere.
+	translateMatrix = XMMatrixTranslation(10.0f, 10.0f, 10.0f);
+	worldMatrix = XMMatrixMultiply(worldMatrix, translateMatrix);
 	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	m_Model->Render(m_Direct3D->GetDeviceContext());
-
 	// Render the model using the texture shader.
 	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
 	if (!result)
 	{
 		return false;
 	}
-
 	// Reset the world matrix.
-	m_Direct3D->GetWorldMatrix(worldMatrix);
-
+	m_Direct3D->GetWorldMatrix(worldMatrix);	
+	
 	// Turn off the Z buffer to begin all 2D rendering.
 	m_Direct3D->TurnZBufferOff();
 	// Turn on alpha blending.

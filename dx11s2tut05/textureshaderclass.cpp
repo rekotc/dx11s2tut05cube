@@ -301,10 +301,14 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	unsigned int bufferNumber;
 
 
+	XMMATRIX worldMatrixLocal = worldMatrix;
+	XMMATRIX viewMatrixLocal = viewMatrix;
+	XMMATRIX projectionMatrixLocal = projectionMatrix;
+
 	// Transpose the matrices to prepare them for the shader.
-	worldMatrix = XMMatrixTranspose(worldMatrix);
-	viewMatrix = XMMatrixTranspose(viewMatrix);
-	projectionMatrix = XMMatrixTranspose(projectionMatrix);
+	worldMatrixLocal = XMMatrixTranspose(worldMatrixLocal);
+	viewMatrixLocal = XMMatrixTranspose(viewMatrixLocal);
+	projectionMatrixLocal = XMMatrixTranspose(projectionMatrixLocal);
 
 	// Lock the constant buffer so it can be written to.
 	result = deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
@@ -317,9 +321,9 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 
 	// Copy the matrices into the constant buffer.
-	dataPtr->world = worldMatrix;
-	dataPtr->view = viewMatrix;
-	dataPtr->projection = projectionMatrix;
+	dataPtr->world = worldMatrixLocal;
+	dataPtr->view = viewMatrixLocal;
+	dataPtr->projection = projectionMatrixLocal;
 
 	// Unlock the constant buffer.
     deviceContext->Unmap(m_matrixBuffer, 0);
