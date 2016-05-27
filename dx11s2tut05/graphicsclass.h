@@ -49,7 +49,13 @@ private:
 	TextureShaderClass* m_TextureShader;
 
 	int m_mouseX, m_mouseY;
+	int m_oldMouseX, m_oldMouseY;
 	int m_FrameCounter;
+	float angle;
+
+
+	XMMATRIX cubeRotation;
+
 };
 
 #endif

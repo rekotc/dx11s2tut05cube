@@ -11,6 +11,9 @@ GraphicsClass::GraphicsClass()
 	m_Model = 0;
 	m_TextureShader = 0;
 	m_Bitmap = 0;
+
+	m_mouseX, m_mouseY, m_oldMouseX, m_oldMouseY = -1;
+	angle = 0;
 }
 
 
@@ -28,6 +31,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	bool result;
 
+	cubeRotation = XMMatrixIdentity();
 
 	// Create the Direct3D object.
 	m_Direct3D = new D3DClass;
@@ -100,6 +104,9 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	
+
+
 	return true;
 }
 
@@ -170,7 +177,7 @@ bool GraphicsClass::Frame(int x, int y, int framecounter)
 bool GraphicsClass::Render()
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
-	XMMATRIX translateMatrix;
+	XMMATRIX translateMatrix,rotateMatrix;
 	bool result;
 	
 
@@ -188,8 +195,73 @@ bool GraphicsClass::Render()
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 
 	
+	 
+
+	XMFLOAT3 axisF = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	XMVECTOR axisV = XMLoadFloat3(&axisF);	
+
+	XMFLOAT3 yaxisF = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	XMVECTOR yaxisV = XMLoadFloat3(&yaxisF);
+
+
+	int deltaX, deltaY;
+
+	deltaX = m_mouseX - m_oldMouseX;
+	deltaY = m_mouseY - m_oldMouseY;
+
+	//se lo spostamento è maggiore lungo X, allora ruoto su asse Y
+	if (abs(deltaX)>=abs(deltaY)){
+
+		//muovo verso dx il mouse
+		if (deltaX>0){
+
+			angle = -0.1f;
+			cubeRotation *= XMMatrixRotationAxis(axisV, angle);
+		}
+		else //muovo verso sx il mouse
+		if (deltaX<0){
+
+				angle = 0.1f;
+				cubeRotation *= XMMatrixRotationAxis(axisV, angle);
+		}
+
+	}
+	else{
+
+		//muovo verso alto il mouse
+		if (deltaY>0){
+
+			angle = -0.1f;
+			cubeRotation *= XMMatrixRotationAxis(yaxisV, angle);
+		}
+		else
+			//muovo verso basso il mouse
+			if (deltaY<0){
+
+				angle = 0.1f;
+				cubeRotation *= XMMatrixRotationAxis(yaxisV, angle);
+
+			}
+	}
+
+
+	
+
+	
+
+
+
+
+
+	m_oldMouseX = m_mouseX;
+	m_oldMouseY = m_mouseY;
+
+	
 	// Translate to the location of the sphere.
+	//rotateMatrix = XMMatrixRotationAxis(axisV,angle);
 	translateMatrix = XMMatrixTranslation(10.0f, 10.0f, 10.0f);
+
+	worldMatrix = XMMatrixMultiply(worldMatrix, cubeRotation);
 	worldMatrix = XMMatrixMultiply(worldMatrix, translateMatrix);
 	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	m_Model->Render(m_Direct3D->GetDeviceContext());
@@ -202,6 +274,10 @@ bool GraphicsClass::Render()
 	// Reset the world matrix.
 	m_Direct3D->GetWorldMatrix(worldMatrix);	
 	
+
+
+
+
 	// Turn off the Z buffer to begin all 2D rendering.
 	m_Direct3D->TurnZBufferOff();
 	// Turn on alpha blending.
