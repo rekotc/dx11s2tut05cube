@@ -20,6 +20,7 @@ GameStateClass::~GameStateClass()
 bool GameStateClass::Initialize()
 {
 	m_mouseX, m_mouseY, m_oldMouseX, m_oldMouseY = -1;
+	m_SelectedId = -1;
 	m_cubeRotationMatrix = XMMatrixIdentity();
 
 	return true;

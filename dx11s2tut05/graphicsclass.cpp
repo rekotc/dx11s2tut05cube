@@ -190,8 +190,12 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter)
 	m_FrameCounter = framecounter;
 	//l'intersezione va verificata sempre, sia se ho premuto un pulsante del mouse sia se sto semplicemente muovendo il cursore
 	TestIntersection(gamestate);
-	//aggiorno il colore del cubo in base all'eventuale intersezione trovata.
-	UpdateCubeColors(gamestate);
+	//aggiorno il colore del cubo in base all'EVENTUALE intersezione trovata.
+	if (gamestate->getClosestId()!=-1)
+		UpdateCubeColors(gamestate);
+	//ruoto il cubo EVENTUALMENTE selezionato
+	//prima verifico se gamestate ha un cubo selezionato oppure no, se NO la funzione non viene chiamata
+	//RotateCube(gamestate);
 	// Render the graphics scene.
 	result = Render(gamestate);
 	if (!result)
