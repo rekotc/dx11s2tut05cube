@@ -39,6 +39,8 @@ public:
 	void GetData(int, float&, float&, float&, XMFLOAT4&, XMMATRIX&);
 	void SetData(int, float, float, float);
 
+	void SetColor(int, XMFLOAT4);
+
 private:
 	int m_modelCount;
 	ModelInfoType* m_ModelInfoList;

@@ -191,7 +191,7 @@ bool SystemClass::Frame()
 	}	
 	
 	//Do the frame processing for the game logic
-	result = m_GameLogic->Frame(m_GameState);
+	result = m_GameLogic->Frame(m_GameState, m_Input);
 	if (!result)
 	{
 		return false;

@@ -188,8 +188,10 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter)
 {
 	bool result;
 	m_FrameCounter = framecounter;
-	//verifico se ho selezionato uno dei cubi
-	//TestIntersection(gamestate);
+	//l'intersezione va verificata sempre, sia se ho premuto un pulsante del mouse sia se sto semplicemente muovendo il cursore
+	TestIntersection(gamestate);
+	//aggiorno il colore del cubo in base all'eventuale intersezione trovata.
+	UpdateCubeColors(gamestate);
 	// Render the graphics scene.
 	result = Render(gamestate);
 	if (!result)
@@ -282,7 +284,7 @@ void GraphicsClass::TestIntersection(GameStateClass* gamestate)
 {
 
 	float pointX, pointY;
-	XMMATRIX projectionMatrix, viewMatrix, inverseViewMatrix, worldMatrix, translateMatrix, inverseWorldMatrix;
+	XMMATRIX projectionMatrix, viewMatrix, inverseViewMatrix, worldMatrix, inverseWorldMatrix;
 	XMFLOAT3 direction, origin, rayOrigin, rayDirection;
 	bool intersect, result;
 
@@ -325,59 +327,73 @@ void GraphicsClass::TestIntersection(GameStateClass* gamestate)
 
 	XMFLOAT3 position;
 	XMFLOAT4 color;
+	XMMATRIX translate;
+	XMMATRIX rotate;	
+	XMVECTOR originV = XMLoadFloat3(&origin);
+	XMVECTOR rayOriginV = XMLoadFloat3(&rayOrigin);
+	XMVECTOR rayDirectionV = XMLoadFloat3(&rayDirection);
+	XMVECTOR directionV = XMLoadFloat3(&direction);
+
+	//al termine di questo ciclo, il gameState conterrà il closestID() ovvero l'id del cubo su cui è posizionato il mouse
 	for (index = 0; index < modelCount; index++)
 	{
 		// Get the world matrix and translate to the location of the sphere.
 		m_Direct3D->GetWorldMatrix(worldMatrix);
 
-		//m_ModelList->GetData(index,position.x,position.y,position.z,color);
-		/*
+		m_ModelList->GetData(index,position.x,position.y,position.z,color, rotate);
+		
 		// Move the model to the location it should be rendered at.
-		D3DXMatrixTranslation(&worldMatrix, position.x, position.y, position.z);
-
+		translate = XMMatrixTranslation(position.x, position.y, position.z);
+		worldMatrix = XMMatrixMultiply(worldMatrix, translate);
+		
 		// Now get the inverse of the translated world matrix.
-		D3DXMatrixInverse(&inverseWorldMatrix, NULL, &worldMatrix);
+		inverseWorldMatrix = XMMatrixInverse(NULL, worldMatrix);
 
 		// Now transform the ray origin and the ray direction from view space to world space.
-		D3DXVec3TransformCoord(&rayOrigin, &origin, &inverseWorldMatrix);
-		D3DXVec3TransformNormal(&rayDirection, &direction, &inverseWorldMatrix);
-
-		// Normalize the ray direction.
-		D3DXVec3Normalize(&rayDirection, &rayDirection);
+		rayOriginV = XMVector3TransformCoord(originV, inverseWorldMatrix);
+		rayDirectionV = XMVector3TransformNormal(directionV, inverseWorldMatrix);
 		
+		// Normalize the ray direction.
+		rayDirectionV = XMVector3Normalize(rayDirectionV);		
 
 		// Now perform the ray-sphere intersection test.
 		//intersect = RaySphereIntersect(rayOrigin, rayDirection, 1.0f);
-		intersect = RayAABBIntersect(debug, gamestate, index, rayOrigin, rayDirection, m_Models[index]->getBoundingBox());*/
+		intersect = RayAABBIntersect(debug, gamestate, index, rayOriginV, rayDirectionV, m_Model->getBoundingBox());
 
 	}
 
 }
 
-bool GraphicsClass::RayAABBIntersect(bool debug, GameStateClass* gamestate, int currentid, XMFLOAT3 rayOrigin, XMFLOAT3 rayDirection, AabbClass* bCube)
+bool GraphicsClass::RayAABBIntersect(bool debug, GameStateClass* gamestate, int currentid, XMVECTOR rayOriginV, XMVECTOR rayDirectionV, AabbClass* bCube)
 {
 	//rayOrigin = D3DXVECTOR3(10.0f, 10.0f, -5.0f);
 	double tmin = -INFINITY, tmax = INFINITY;
 
-	if (rayDirection.x != 0.0) {
-		double tx1 = (bCube->min[0] - rayOrigin.x) / rayDirection.x;
-		double tx2 = (bCube->max[0] - rayOrigin.x) / rayDirection.x;
+
+	XMFLOAT4 rayOriginF;
+	XMStoreFloat4(&rayOriginF, rayOriginV);
+	XMFLOAT4 rayDirectionF;
+	XMStoreFloat4(&rayDirectionF, rayDirectionV);
+
+	if (rayDirectionF.x != 0.0) {
+		double tx1 = (bCube->min[0] - rayOriginF.x) / rayDirectionF.x;
+		double tx2 = (bCube->max[0] - rayOriginF.x) / rayDirectionF.x;
 
 		tmin = max(tmin, min(tx1, tx2));
 		tmax = min(tmax, max(tx1, tx2));
 	}
 
-	if (rayDirection.y != 0.0) {
-		double ty1 = (bCube->min[1] - rayOrigin.y) / rayDirection.y;
-		double ty2 = (bCube->max[1] - rayOrigin.y) / rayDirection.y;
+	if (rayDirectionF.y != 0.0) {
+		double ty1 = (bCube->min[1] - rayOriginF.y) / rayDirectionF.y;
+		double ty2 = (bCube->max[1] - rayOriginF.y) / rayDirectionF.y;
 
 		tmin = max(tmin, min(ty1, ty2));
 		tmax = min(tmax, max(ty1, ty2));
 	}
 
-	if (rayDirection.z != 0.0) {
-		double tz1 = (bCube->min[2] - rayOrigin.z) / rayDirection.z;
-		double tz2 = (bCube->max[2] - rayOrigin.z) / rayDirection.z;
+	if (rayDirectionF.z != 0.0) {
+		double tz1 = (bCube->min[2] - rayOriginF.z) / rayDirectionF.z;
+		double tz2 = (bCube->max[2] - rayOriginF.z) / rayDirectionF.z;
 
 		tmin = max(tmin, min(tz1, tz2));
 		tmax = min(tmax, max(tz1, tz2));
@@ -404,7 +420,7 @@ bool GraphicsClass::RayAABBIntersect(bool debug, GameStateClass* gamestate, int 
 void GraphicsClass::RotateCube(GameStateClass* GameState){
 
 
-	//int selectedID = GameState->getClosestId();
+	int selectedID = GameState->getClosestId();
 	XMMATRIX cubeRotation = GameState->getCubeRotationMatrix();
 	m_mouseX = GameState->getCurrentMouseX();
 	m_mouseY = GameState->getCurrentMouseY();
@@ -464,4 +480,20 @@ void GraphicsClass::RotateCube(GameStateClass* GameState){
 	//aggiorno il gamestate
 	GameState->setCubeRotationMatrix(cubeRotation);
 	GameState->setOldMousePos(m_mouseX, m_mouseY);
+}
+
+
+void GraphicsClass::UpdateCubeColors(GameStateClass* gamestate){
+
+	//prelevo l'id del cubo su cui è posizionato il mouse
+	int id = gamestate->getClosestId();
+
+	//se l'intersezione non è vuota
+	if (id != -1){
+
+		m_ModelList->SetColor(id,XMFLOAT4(0.5f, 0.6f, 0.34f, 1.0f));
+	}
+
+
+
 }

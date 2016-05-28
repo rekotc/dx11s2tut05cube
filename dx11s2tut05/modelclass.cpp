@@ -488,3 +488,9 @@ bool ModelClass::LoadModel(char* filename)
 
 	return true;
 }
+
+
+AabbClass* ModelClass::getBoundingBox(){
+
+	return m_boundingBox;
+}

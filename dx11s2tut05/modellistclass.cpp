@@ -100,3 +100,8 @@ void ModelListClass::SetData(int index, float positionX, float positionY, float 
 	m_ModelInfoList[index].positionZ = positionZ;
 
 }
+
+void ModelListClass::SetColor(int index, XMFLOAT4 color){
+
+	m_ModelInfoList[index].color = color;
+}

@@ -43,8 +43,8 @@ public:
 private:
 	bool Render(GameStateClass*);
 	void TestIntersection(GameStateClass*);
-	bool RayAABBIntersect(bool, GameStateClass*, int, XMFLOAT3 rayOrigin, XMFLOAT3 rayDirection, AabbClass*);
-
+	bool RayAABBIntersect(bool, GameStateClass*, int, XMVECTOR , XMVECTOR, AabbClass*);
+	void UpdateCubeColors(GameStateClass*);
 	void RotateCube(GameStateClass*);
 
 private:

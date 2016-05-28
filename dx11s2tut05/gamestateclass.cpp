@@ -83,6 +83,11 @@ void GameStateClass::setClosestId(int id)
 	m_ClosestId = id;
 }
 
+int GameStateClass::getClosestId()
+{
+	return m_ClosestId;
+}
+
 void GameStateClass::setCurrentMinDistance(double mindistance)
 {
 	m_tMinDistance = mindistance;

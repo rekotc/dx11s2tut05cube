@@ -9,7 +9,7 @@
 // MY CLASS INCLUDES //
 ///////////////////////
 #include "gamestateclass.h"
-
+#include "inputclass.h"
 
 /////////////
 // GLOBALS //
@@ -34,14 +34,14 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame(GameStateClass*);
+	bool Frame(GameStateClass*, InputClass*);
 
 	//bool Render();
 	
 
 private:
 	
-	bool HandleInput(GameStateClass*);
+	bool HandleInput(GameStateClass*, InputClass*);
 
 private:
 	int m_mouseX, m_mouseY;
