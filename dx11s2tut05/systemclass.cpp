@@ -8,6 +8,9 @@ SystemClass::SystemClass()
 {
 	m_Input = 0;
 	m_Graphics = 0;
+	m_GameLogic = 0;
+	m_GameState = 0;
+	
 }
 
 
@@ -63,6 +66,25 @@ bool SystemClass::Initialize()
 	{
 		return false;
 	}	
+
+	m_GameLogic = new GameLogicClass;
+	if (!m_GameLogic)
+	{
+		return false;
+	}
+
+	m_GameState = new GameStateClass;
+	if (!m_GameState)
+	{
+		return false;
+	}
+	// Initialize the gamestate object.
+	result = m_GameState->Initialize();
+	if (!result)
+	{
+		return false;
+	}
+
 	
 	return true;
 }
@@ -84,6 +106,21 @@ void SystemClass::Shutdown()
 		delete m_Input;
 		m_Input = 0;
 	}
+
+	// Release the gamelogic object.
+	if (m_GameLogic)
+	{
+		delete m_GameLogic;
+		m_GameLogic = 0;
+	}
+
+	// Release the gamestate object.
+	if (m_GameState)
+	{
+		delete m_GameState;
+		m_GameState = 0;
+	}
+
 
 	// Shutdown the window.
 	ShutdownWindows();
@@ -151,11 +188,17 @@ bool SystemClass::Frame()
 	if(m_Input->isKeyDown(VK_ESCAPE))
 	{
 		return false;
-	}
+	}	
 	
+	//Do the frame processing for the game logic
+	result = m_GameLogic->Frame(m_GameState);
+	if (!result)
+	{
+		return false;
+	}
 
 	// Do the frame processing for the graphics object.
-	result = m_Graphics->Frame(m_MouseX,m_MouseY,m_FrameCounter);
+	result = m_Graphics->Frame(m_GameState, m_FrameCounter);
 	if(!result)
 	{
 		return false;
@@ -188,8 +231,7 @@ LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam
 		case WM_INPUT:                          // mouse data in
 			
 			m_Input->readCursorPos(hwnd);
-			m_MouseX = m_Input->getCursorPosX();
-			m_MouseY = m_Input->getCursorPosY();
+			m_GameState->setCurrentMousePos(m_Input->getCursorPosX(), m_Input->getCursorPosY());
 			return 0;
 
 		// Any other messages send to the default message handler as our application won't make use of them.

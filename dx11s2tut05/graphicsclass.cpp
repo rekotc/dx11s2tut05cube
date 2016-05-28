@@ -11,9 +11,9 @@ GraphicsClass::GraphicsClass()
 	m_Model = 0;
 	m_TextureShader = 0;
 	m_Bitmap = 0;
+	m_ModelList = 0;
 
-	m_mouseX, m_mouseY, m_oldMouseX, m_oldMouseY = -1;
-	angle = 0;
+
 }
 
 
@@ -30,19 +30,21 @@ GraphicsClass::~GraphicsClass()
 bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	bool result;
+	m_screenWidth	= screenWidth;
+	m_screenHeight = screenHeight;
 
 	cubeRotation = XMMatrixIdentity();
 
 	// Create the Direct3D object.
 	m_Direct3D = new D3DClass;
-	if(!m_Direct3D)
+	if (!m_Direct3D)
 	{
 		return false;
 	}
 
 	// Initialize the Direct3D object.
 	result = m_Direct3D->Initialize(screenWidth, screenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
-	if(!result)
+	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize Direct3D.", L"Error", MB_OK);
 		return false;
@@ -58,6 +60,31 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// Set the initial position of the camera.
 	m_Camera->SetPosition(10.0f, 10.0f, -5.0f);
 
+	// Create the model list object.
+	m_ModelList = new ModelListClass;
+	if (!m_ModelList)
+	{
+		return false;
+	}
+
+	// Initialize the model list object.
+	result = m_ModelList->Initialize(9);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the model list object.", L"Error", MB_OK);
+		return false;
+	}
+
+	m_ModelList->SetData(0, 10.0f, 10.0f, 10.0f);
+	m_ModelList->SetData(1,12.0f, 10.0f, 10.0f);
+	m_ModelList->SetData(2,14.0f, 10.0f, 10.0f);
+	m_ModelList->SetData(3,10.0f, 12.0f, 10.0f);
+	m_ModelList->SetData(4,12.0f, 12.0f, 10.0f);
+	m_ModelList->SetData(5,14.0f, 12.0f, 10.0f);
+	m_ModelList->SetData(6,10.0f, 14.0f, 10.0f);
+	m_ModelList->SetData(7,12.0f, 14.0f, 10.0f);
+	m_ModelList->SetData(8,14.0f, 14.0f, 10.0f);
+
 	// Create the model object.
 	m_Model = new ModelClass;
 	if (!m_Model)
@@ -66,13 +93,14 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the model object.
-	result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(),"../data/dice.txt", "../data/dice.tga");
+	result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), "../data/dice.txt", "../data/dice.tga");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
 
+	
 
 	// Create the bitmap object.
 	m_Bitmap = new BitmapClass;
@@ -104,7 +132,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	
+
 
 
 	return true;
@@ -145,7 +173,7 @@ void GraphicsClass::Shutdown()
 	}
 
 	// Release the D3D object.
-	if(m_Direct3D)
+	if (m_Direct3D)
 	{
 		m_Direct3D->Shutdown();
 		delete m_Direct3D;
@@ -156,16 +184,15 @@ void GraphicsClass::Shutdown()
 }
 
 
-bool GraphicsClass::Frame(int x, int y, int framecounter)
+bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter)
 {
 	bool result;
-	m_mouseX = x;
-	m_mouseY = y;
 	m_FrameCounter = framecounter;
-
+	//verifico se ho selezionato uno dei cubi
+	//TestIntersection(gamestate);
 	// Render the graphics scene.
-	result = Render();
-	if(!result)
+	result = Render(gamestate);
+	if (!result)
 	{
 		return false;
 	}
@@ -174,13 +201,14 @@ bool GraphicsClass::Frame(int x, int y, int framecounter)
 }
 
 
-bool GraphicsClass::Render()
+bool GraphicsClass::Render(GameStateClass* gamestate )
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
-	XMMATRIX translateMatrix,rotateMatrix;
+	XMMATRIX translateMatrix, rotateMatrix;
 	bool result;
-	
-
+	int index;
+	XMFLOAT3 position;
+	XMFLOAT4 color;
 	// Clear the buffers to begin the scene.
 	m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -193,12 +221,198 @@ bool GraphicsClass::Render()
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 	//necessaria per rendering 2D
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
+		
+	for (index = 0; index < m_ModelList->GetModelCount(); index++)
+	{
+
+		m_ModelList->GetData(index, position.x, position.y, position.z, color, cubeRotation);
+		// Translate to the location of the sphere.
+		translateMatrix = XMMatrixTranslation(position.x, position.y, position.z);
+		//cubeRotation = gamestate->getCubeRotationMatrix();
+
+		worldMatrix = XMMatrixMultiply(worldMatrix, cubeRotation);
+		worldMatrix = XMMatrixMultiply(worldMatrix, translateMatrix);
+
+		m_Model->Render(m_Direct3D->GetDeviceContext());
+		// Render the model using the texture shader.
+		result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
+		if (!result)
+		{
+			return false;
+		}
+		// Reset the world matrix.
+		m_Direct3D->GetWorldMatrix(worldMatrix);
+
+	}
+
+
+	/*worldMatrix = XMMatrixMultiply(worldMatrix, cubeRotation);
+	//worldMatrix = XMMatrixMultiply(worldMatrix, translateMatrix);
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_Model->Render(m_Direct3D->GetDeviceContext());
+	// Render the model using the texture shader.
+	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+	// Reset the world matrix.
+	m_Direct3D->GetWorldMatrix(worldMatrix);*/
+
+	// Turn off the Z buffer to begin all 2D rendering.
+	m_Direct3D->TurnZBufferOff();
+	// Turn on alpha blending.
+	m_Direct3D->EnableAlphaBlending();
+	// Render the mouse cursor with the texture shader.
+	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), gamestate->getCurrentMouseX(), gamestate->getCurrentMouseY(), m_FrameCounter);  if (!result) { return false; }
+	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
+
+	// Turn off alpha blending.
+	m_Direct3D->DisableAlphaBlending();
+	// Turn the Z buffer back on now that all 2D rendering has completed.
+	m_Direct3D->TurnZBufferOn();
+
+	// Present the rendered scene to the screen.
+	m_Direct3D->EndScene();
+
+	return true;
+}
+
+void GraphicsClass::TestIntersection(GameStateClass* gamestate)
+{
+
+	float pointX, pointY;
+	XMMATRIX projectionMatrix, viewMatrix, inverseViewMatrix, worldMatrix, translateMatrix, inverseWorldMatrix;
+	XMFLOAT3 direction, origin, rayOrigin, rayDirection;
+	bool intersect, result;
+
+	bool debug = false;
+	int lastHoverId, lastSelectedId;
 
 	
-	 
+	float radius;
+	int modelCount, index;
+
+	// Move the mouse cursor coordinates into the -1 to +1 range.
+	pointX = ((2.0f * (float)gamestate->getCurrentMouseX()) / (float)m_screenWidth) - 1.0f;
+	pointY = (((2.0f * (float)gamestate->getCurrentMouseY()) / (float)m_screenHeight) - 1.0f) * -1.0f;
+
+	// Adjust the points using the projection matrix to account for the aspect ratio of the viewport.
+	m_Direct3D->GetProjectionMatrix(projectionMatrix);
+	XMFLOAT4X4 fProjectionMatrix;
+	XMStoreFloat4x4(&fProjectionMatrix, projectionMatrix);
+	//float fProjectionMatrix_11 = fProjectionMatrix._11;
+	pointX = pointX / fProjectionMatrix._11;
+	pointY = pointY / fProjectionMatrix._22;
+
+	// Get the inverse of the view matrix.
+	m_Camera->GetViewMatrix(viewMatrix);
+	inverseViewMatrix = XMMatrixInverse(NULL, viewMatrix);
+	XMFLOAT4X4 fInverseViewMatrix;
+	XMStoreFloat4x4(&fInverseViewMatrix, inverseViewMatrix);
+
+	// Calculate the direction of the picking ray in view space.
+	direction.x = (pointX * fInverseViewMatrix._11) + (pointY * fInverseViewMatrix._21) + fInverseViewMatrix._31;
+	direction.y = (pointX * fInverseViewMatrix._12) + (pointY * fInverseViewMatrix._22) + fInverseViewMatrix._32;
+	direction.z = (pointX * fInverseViewMatrix._13) + (pointY * fInverseViewMatrix._23) + fInverseViewMatrix._33;
+
+	// Get the origin of the picking ray which is the position of the camera.
+	origin = m_Camera->GetPosition();
+
+	// Get the number of models that will be rendered.
+	modelCount = m_ModelList->GetModelCount();
+	
+
+	XMFLOAT3 position;
+	XMFLOAT4 color;
+	for (index = 0; index < modelCount; index++)
+	{
+		// Get the world matrix and translate to the location of the sphere.
+		m_Direct3D->GetWorldMatrix(worldMatrix);
+
+		//m_ModelList->GetData(index,position.x,position.y,position.z,color);
+		/*
+		// Move the model to the location it should be rendered at.
+		D3DXMatrixTranslation(&worldMatrix, position.x, position.y, position.z);
+
+		// Now get the inverse of the translated world matrix.
+		D3DXMatrixInverse(&inverseWorldMatrix, NULL, &worldMatrix);
+
+		// Now transform the ray origin and the ray direction from view space to world space.
+		D3DXVec3TransformCoord(&rayOrigin, &origin, &inverseWorldMatrix);
+		D3DXVec3TransformNormal(&rayDirection, &direction, &inverseWorldMatrix);
+
+		// Normalize the ray direction.
+		D3DXVec3Normalize(&rayDirection, &rayDirection);
+		
+
+		// Now perform the ray-sphere intersection test.
+		//intersect = RaySphereIntersect(rayOrigin, rayDirection, 1.0f);
+		intersect = RayAABBIntersect(debug, gamestate, index, rayOrigin, rayDirection, m_Models[index]->getBoundingBox());*/
+
+	}
+
+}
+
+bool GraphicsClass::RayAABBIntersect(bool debug, GameStateClass* gamestate, int currentid, XMFLOAT3 rayOrigin, XMFLOAT3 rayDirection, AabbClass* bCube)
+{
+	//rayOrigin = D3DXVECTOR3(10.0f, 10.0f, -5.0f);
+	double tmin = -INFINITY, tmax = INFINITY;
+
+	if (rayDirection.x != 0.0) {
+		double tx1 = (bCube->min[0] - rayOrigin.x) / rayDirection.x;
+		double tx2 = (bCube->max[0] - rayOrigin.x) / rayDirection.x;
+
+		tmin = max(tmin, min(tx1, tx2));
+		tmax = min(tmax, max(tx1, tx2));
+	}
+
+	if (rayDirection.y != 0.0) {
+		double ty1 = (bCube->min[1] - rayOrigin.y) / rayDirection.y;
+		double ty2 = (bCube->max[1] - rayOrigin.y) / rayDirection.y;
+
+		tmin = max(tmin, min(ty1, ty2));
+		tmax = min(tmax, max(ty1, ty2));
+	}
+
+	if (rayDirection.z != 0.0) {
+		double tz1 = (bCube->min[2] - rayOrigin.z) / rayDirection.z;
+		double tz2 = (bCube->max[2] - rayOrigin.z) / rayDirection.z;
+
+		tmin = max(tmin, min(tz1, tz2));
+		tmax = min(tmax, max(tz1, tz2));
+	}
+
+	if (debug == true){
+		int ciao = 23;
+	}
+
+	//se c'è l'intersezione, e il nuovo oggetto si trova ad una distanza inferiore rispetto a quello correntemente selezionato
+	//aggiorna selectionState con le informazioni sul nuovo oggetto
+	if ((tmax >= tmin) && (gamestate->getCurrentMinDistance()>tmin)){
+
+		gamestate->setClosestId(currentid);
+		gamestate->setCurrentMinDistance(tmin);
+		return  true;
+
+	}
+	else
+		return false;
+
+}
+
+void GraphicsClass::RotateCube(GameStateClass* GameState){
+
+
+	//int selectedID = GameState->getClosestId();
+	XMMATRIX cubeRotation = GameState->getCubeRotationMatrix();
+	m_mouseX = GameState->getCurrentMouseX();
+	m_mouseY = GameState->getCurrentMouseY();
+	m_oldMouseX = GameState->getOldMouseX();
+	m_oldMouseY = GameState->getOldMouseY();
 
 	XMFLOAT3 axisF = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	XMVECTOR axisV = XMLoadFloat3(&axisF);	
+	XMVECTOR axisV = XMLoadFloat3(&axisF);
 
 	XMFLOAT3 yaxisF = XMFLOAT3(1.0f, 0.0f, 0.0f);
 	XMVECTOR yaxisV = XMLoadFloat3(&yaxisF);
@@ -209,34 +423,36 @@ bool GraphicsClass::Render()
 	deltaX = m_mouseX - m_oldMouseX;
 	deltaY = m_mouseY - m_oldMouseY;
 
+
+
 	//se lo spostamento è maggiore lungo X, allora ruoto su asse Y
-	if (abs(deltaX)>=abs(deltaY)){
+	if (abs(deltaX) >= abs(deltaY)){
 
 		//muovo verso dx il mouse
-		if (deltaX>0){
+		if (deltaX > 0){
 
 			angle = -0.1f;
 			cubeRotation *= XMMatrixRotationAxis(axisV, angle);
 		}
 		else //muovo verso sx il mouse
-		if (deltaX<0){
+			if (deltaX < 0){
 
 				angle = 0.1f;
 				cubeRotation *= XMMatrixRotationAxis(axisV, angle);
-		}
+			}
 
 	}
 	else{
 
 		//muovo verso alto il mouse
-		if (deltaY>0){
+		if (deltaY > 0){
 
 			angle = -0.1f;
 			cubeRotation *= XMMatrixRotationAxis(yaxisV, angle);
 		}
 		else
 			//muovo verso basso il mouse
-			if (deltaY<0){
+			if (deltaY < 0){
 
 				angle = 0.1f;
 				cubeRotation *= XMMatrixRotationAxis(yaxisV, angle);
@@ -245,54 +461,7 @@ bool GraphicsClass::Render()
 	}
 
 
-	
-
-	
-
-
-
-
-
-	m_oldMouseX = m_mouseX;
-	m_oldMouseY = m_mouseY;
-
-	
-	// Translate to the location of the sphere.
-	//rotateMatrix = XMMatrixRotationAxis(axisV,angle);
-	translateMatrix = XMMatrixTranslation(10.0f, 10.0f, 10.0f);
-
-	worldMatrix = XMMatrixMultiply(worldMatrix, cubeRotation);
-	worldMatrix = XMMatrixMultiply(worldMatrix, translateMatrix);
-	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	m_Model->Render(m_Direct3D->GetDeviceContext());
-	// Render the model using the texture shader.
-	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
-	if (!result)
-	{
-		return false;
-	}
-	// Reset the world matrix.
-	m_Direct3D->GetWorldMatrix(worldMatrix);	
-	
-
-
-
-
-	// Turn off the Z buffer to begin all 2D rendering.
-	m_Direct3D->TurnZBufferOff();
-	// Turn on alpha blending.
-	m_Direct3D->EnableAlphaBlending();
-	// Render the mouse cursor with the texture shader.
-	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), m_mouseX, m_mouseY, m_FrameCounter);  if (!result) { return false; }
-	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
-	
-	// Turn off alpha blending.
-	m_Direct3D->DisableAlphaBlending();
-	// Turn the Z buffer back on now that all 2D rendering has completed.
-	m_Direct3D->TurnZBufferOn();	
-
-	// Present the rendered scene to the screen.
-	m_Direct3D->EndScene();
-
-	return true;
+	//aggiorno il gamestate
+	GameState->setCubeRotationMatrix(cubeRotation);
+	GameState->setOldMousePos(m_mouseX, m_mouseY);
 }

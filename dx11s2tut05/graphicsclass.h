@@ -13,6 +13,8 @@
 #include "modelclass.h"
 #include "textureshaderclass.h"
 #include "bitmapclass.h"
+#include "gamestateclass.h"
+#include "modellistclass.h"
 
 
 /////////////
@@ -36,10 +38,14 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame(int,int,int);
+	bool Frame(GameStateClass*, int);
 
 private:
-	bool Render();
+	bool Render(GameStateClass*);
+	void TestIntersection(GameStateClass*);
+	bool RayAABBIntersect(bool, GameStateClass*, int, XMFLOAT3 rayOrigin, XMFLOAT3 rayDirection, AabbClass*);
+
+	void RotateCube(GameStateClass*);
 
 private:
 	D3DClass* m_Direct3D;
@@ -48,13 +54,18 @@ private:
 	ModelClass* m_Model;
 	TextureShaderClass* m_TextureShader;
 
+	// Create the model list object.
+	ModelListClass* m_ModelList;
+
+	int m_FrameCounter;
+	
 	int m_mouseX, m_mouseY;
 	int m_oldMouseX, m_oldMouseY;
-	int m_FrameCounter;
 	float angle;
 
-
 	XMMATRIX cubeRotation;
+	int m_screenWidth, m_screenHeight;
+	//CollisionClass* selectionState;
 
 };
 

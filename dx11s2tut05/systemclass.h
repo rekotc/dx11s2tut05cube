@@ -23,6 +23,8 @@
 ///////////////////////
 #include "inputclass.h"
 #include "graphicsclass.h"
+#include "gamelogicclass.h"
+#include "gamestateclass.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,11 +54,11 @@ private:
 	HWND m_hwnd;
 
 	int m_FrameCounter;
-	int m_MouseX, m_MouseY;
-
+	
 	InputClass* m_Input;
 	GraphicsClass* m_Graphics;
-
+	GameLogicClass* m_GameLogic;
+	GameStateClass* m_GameState;
 };
 
 
