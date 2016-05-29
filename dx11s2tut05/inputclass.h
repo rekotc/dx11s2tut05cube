@@ -219,6 +219,9 @@ public:
 		return wheel;
 	}
 
+	//test
+	short getMouseLButtonT();
+
 	// Return state of left mouse button.
 	bool getMouseLButton()  const { return mouseLButton; }
 

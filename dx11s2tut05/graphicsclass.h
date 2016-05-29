@@ -15,13 +15,14 @@
 #include "bitmapclass.h"
 #include "gamestateclass.h"
 #include "modellistclass.h"
-
+#include "lightshaderclass.h"
+#include "lightclass.h"
 
 /////////////
 // GLOBALS //
 /////////////
 const bool FULL_SCREEN = false;
-const bool VSYNC_ENABLED = true;
+const bool VSYNC_ENABLED = false;
 const float SCREEN_DEPTH = 1000.0f;
 const float SCREEN_NEAR = 0.1f;
 
@@ -47,12 +48,17 @@ private:
 	void UpdateCubeColors(GameStateClass*);
 	void RotateCube(GameStateClass*);
 
+	static void resetSelection(GameStateClass*, ModelListClass*);
+
 private:
 	D3DClass* m_Direct3D;
 	CameraClass* m_Camera;
 	BitmapClass* m_Bitmap;
 	ModelClass* m_Model;
+
 	TextureShaderClass* m_TextureShader;
+	LightShaderClass* m_LightShader;
+	LightClass* m_Light;
 
 	// Create the model list object.
 	ModelListClass* m_ModelList;

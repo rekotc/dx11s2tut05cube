@@ -9,7 +9,11 @@ GraphicsClass::GraphicsClass()
 	m_Direct3D = 0;
 	m_Camera = 0;
 	m_Model = 0;
+
 	m_TextureShader = 0;
+	m_LightShader = 0;
+	m_Light = 0;
+
 	m_Bitmap = 0;
 	m_ModelList = 0;
 
@@ -32,6 +36,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	bool result;
 	m_screenWidth	= screenWidth;
 	m_screenHeight = screenHeight;
+
+	XMMATRIX baseViewMatrix;
 
 	cubeRotation = XMMatrixIdentity();
 
@@ -59,6 +65,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Set the initial position of the camera.
 	m_Camera->SetPosition(10.0f, 10.0f, -5.0f);
+	m_Camera->Render();
+	m_Camera->GetViewMatrix(baseViewMatrix);
 
 	// Create the model list object.
 	m_ModelList = new ModelListClass;
@@ -132,7 +140,30 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// Create the light shader object.
+	m_LightShader = new LightShaderClass;
+	if (!m_LightShader)
+	{
+		return false;
+	}
 
+	// Initialize the light shader object.
+	result = m_LightShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the light shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the light object.
+	m_Light = new LightClass;
+	if (!m_Light)
+	{
+		return false;
+	}
+
+	// Initialize the light object.
+	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
 
 
 	return true;
@@ -188,14 +219,24 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter)
 {
 	bool result;
 	m_FrameCounter = framecounter;
-	//l'intersezione va verificata sempre, sia se ho premuto un pulsante del mouse sia se sto semplicemente muovendo il cursore
-	TestIntersection(gamestate);
-	//aggiorno il colore del cubo in base all'EVENTUALE intersezione trovata.
-	if (gamestate->getClosestId()!=-1)
-		UpdateCubeColors(gamestate);
+	
+	
+		//test, il lock è true se ho rilasciato la selezione sul cubo
+		if (gamestate->getLock()==true){
+			int pirla = 34;
+		}
+		//verifico l'intersezione, a meno che non stia già trascinando un cubo
+		if (gamestate->LeftMouseButtonIsDragged() == false){
+			TestIntersection(gamestate);
+			//aggiorno il colore del cubo in base all'EVENTUALE intersezione trovata.
+			UpdateCubeColors(gamestate);
+		}
+	
+	
 	//ruoto il cubo EVENTUALMENTE selezionato
-	//prima verifico se gamestate ha un cubo selezionato oppure no, se NO la funzione non viene chiamata
-	//RotateCube(gamestate);
+	//prima verifico se gamestate ha un cubo selezionato oppure no e se sto trascinando l'oggetto, se NO la funzione non viene chiamata
+	if (gamestate->getMouseHoverID() != -1 && gamestate->LeftMouseButtonIsDragged()==true)
+		RotateCube(gamestate);
 	// Render the graphics scene.
 	result = Render(gamestate);
 	if (!result)
@@ -241,7 +282,13 @@ bool GraphicsClass::Render(GameStateClass* gamestate )
 
 		m_Model->Render(m_Direct3D->GetDeviceContext());
 		// Render the model using the texture shader.
-		result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
+		//result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
+		if (gamestate->getMouseHoverID()==0){
+			int ciao = 1;
+
+		}
+		result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_ModelList->GetColor(index));
+
 		if (!result)
 		{
 			return false;
@@ -272,7 +319,7 @@ bool GraphicsClass::Render(GameStateClass* gamestate )
 	// Render the mouse cursor with the texture shader.
 	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), gamestate->getCurrentMouseX(), gamestate->getCurrentMouseY(), m_FrameCounter);  if (!result) { return false; }
 	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
-
+	
 	// Turn off alpha blending.
 	m_Direct3D->DisableAlphaBlending();
 	// Turn the Z buffer back on now that all 2D rendering has completed.
@@ -334,37 +381,44 @@ void GraphicsClass::TestIntersection(GameStateClass* gamestate)
 	XMMATRIX translate;
 	XMMATRIX rotate;	
 	XMVECTOR originV = XMLoadFloat3(&origin);
-	XMVECTOR rayOriginV = XMLoadFloat3(&rayOrigin);
+	XMVECTOR rayOriginV;
 	XMVECTOR rayDirectionV = XMLoadFloat3(&rayDirection);
 	XMVECTOR directionV = XMLoadFloat3(&direction);
 
-	//al termine di questo ciclo, il gameState conterrà il closestID() ovvero l'id del cubo su cui è posizionato il mouse
-	for (index = 0; index < modelCount; index++)
-	{
-		// Get the world matrix and translate to the location of the sphere.
-		m_Direct3D->GetWorldMatrix(worldMatrix);
+	//se c'era qualcosa di selezionato, lo resetto.
+	if (gamestate->getMouseHoverID() != -1 )
+		resetSelection(gamestate, m_ModelList);
 
-		m_ModelList->GetData(index,position.x,position.y,position.z,color, rotate);
-		
-		// Move the model to the location it should be rendered at.
-		translate = XMMatrixTranslation(position.x, position.y, position.z);
-		worldMatrix = XMMatrixMultiply(worldMatrix, translate);
-		
-		// Now get the inverse of the translated world matrix.
-		inverseWorldMatrix = XMMatrixInverse(NULL, worldMatrix);
 
-		// Now transform the ray origin and the ray direction from view space to world space.
-		rayOriginV = XMVector3TransformCoord(originV, inverseWorldMatrix);
-		rayDirectionV = XMVector3TransformNormal(directionV, inverseWorldMatrix);
-		
-		// Normalize the ray direction.
-		rayDirectionV = XMVector3Normalize(rayDirectionV);		
+		//al termine di questo ciclo, gamestate->closestID() ovvero l'id del cubo su cui è posizionato il mouse
+		for (index = 0; index < modelCount; index++)
+		{
+			// Get the world matrix and translate to the location of the sphere.
+			m_Direct3D->GetWorldMatrix(worldMatrix);
 
-		// Now perform the ray-sphere intersection test.
-		//intersect = RaySphereIntersect(rayOrigin, rayDirection, 1.0f);
-		intersect = RayAABBIntersect(debug, gamestate, index, rayOriginV, rayDirectionV, m_Model->getBoundingBox());
+			m_ModelList->GetData(index, position.x, position.y, position.z, color, rotate);
 
-	}
+			// Move the model to the location it should be rendered at.
+			translate = XMMatrixTranslation(position.x, position.y, position.z);
+			worldMatrix = XMMatrixMultiply(worldMatrix, translate);
+
+			// Now get the inverse of the translated world matrix.
+			inverseWorldMatrix = XMMatrixInverse(NULL, worldMatrix);
+
+			// Now transform the ray origin and the ray direction from view space to world space.
+			rayOriginV = XMVector3TransformCoord(originV, inverseWorldMatrix);
+			rayDirectionV = XMVector3TransformNormal(directionV, inverseWorldMatrix);
+
+			// Normalize the ray direction.
+			rayDirectionV = XMVector3Normalize(rayDirectionV);
+
+			// Now perform the ray-sphere intersection test.
+			//intersect = RaySphereIntersect(rayOrigin, rayDirection, 1.0f);
+			intersect = RayAABBIntersect(debug, gamestate, index, rayOriginV, rayDirectionV, m_Model->getBoundingBox());
+
+		}
+	
+	
 
 }
 
@@ -407,11 +461,16 @@ bool GraphicsClass::RayAABBIntersect(bool debug, GameStateClass* gamestate, int 
 		int ciao = 23;
 	}
 
+	if (tmax >= tmin){
+
+		int ciao = 45;
+	}
+
 	//se c'è l'intersezione, e il nuovo oggetto si trova ad una distanza inferiore rispetto a quello correntemente selezionato
 	//aggiorna selectionState con le informazioni sul nuovo oggetto
 	if ((tmax >= tmin) && (gamestate->getCurrentMinDistance()>tmin)){
 
-		gamestate->setClosestId(currentid);
+		gamestate->setMouseHoverID(currentid);
 		gamestate->setCurrentMinDistance(tmin);
 		return  true;
 
@@ -424,8 +483,8 @@ bool GraphicsClass::RayAABBIntersect(bool debug, GameStateClass* gamestate, int 
 void GraphicsClass::RotateCube(GameStateClass* GameState){
 
 
-	int selectedID = GameState->getClosestId();
-	XMMATRIX cubeRotation = GameState->getCubeRotationMatrix();
+	int selectedID = GameState->getMouseHoverID();
+	XMMATRIX cubeRotation = m_ModelList->GetRotation(selectedID);
 	m_mouseX = GameState->getCurrentMouseX();
 	m_mouseY = GameState->getCurrentMouseY();
 	m_oldMouseX = GameState->getOldMouseX();
@@ -482,22 +541,55 @@ void GraphicsClass::RotateCube(GameStateClass* GameState){
 
 
 	//aggiorno il gamestate
-	GameState->setCubeRotationMatrix(cubeRotation);
+	m_ModelList->SetRotation(selectedID, cubeRotation);
+	//GameState->setCubeRotationMatrix(cubeRotation);
 	GameState->setOldMousePos(m_mouseX, m_mouseY);
 }
 
 
 void GraphicsClass::UpdateCubeColors(GameStateClass* gamestate){
 
-	//prelevo l'id del cubo su cui è posizionato il mouse
-	int id = gamestate->getClosestId();
 
-	//se l'intersezione non è vuota
-	if (id != -1){
+	
 
-		m_ModelList->SetColor(id,XMFLOAT4(0.5f, 0.6f, 0.34f, 1.0f));
+
+	if (m_FrameCounter == 500){
+
+		int ciao = 12;
 	}
 
+	int id = -1;
+	//prelevo l'id del cubo su cui è posizionato il mouse
+	id = gamestate->getMouseHoverID();
+	XMFLOAT4 hoverColor = XMFLOAT4(0.5f, 0.6f, 0.34f, 1.0f);
+	XMFLOAT4 clickColor = XMFLOAT4(0.1f, 0.9f, 0.11f, 1.0f);
+	//se l'intersezione non è vuota vuol dire che SICURAMENTE il mouse è posizionato su un oggetto
+	if (id != -1){
 
+		//test
+		if(gamestate->isLeftMouseButtonClicked() == true)gamestate->setLock(true);
+
+		//se sto trascinando o se ho cliccato su un oggetto
+		if (gamestate->LeftMouseButtonIsDragged() == true || gamestate->isLeftMouseButtonClicked()==true){
+			m_ModelList->SetColor(id, clickColor);
+		}
+		//altrimenti ho semplicemente posizionato il mouse sull'oggetto
+		else
+			m_ModelList->SetColor(id, hoverColor);		
+	}
+
+	
+}
+
+void GraphicsClass::resetSelection(GameStateClass* gamestate, ModelListClass* modellist){
+
+	//resetto il colore della selezione corrente
+	modellist->SetColor(gamestate->getMouseHoverID(), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+	//resetto id e distanza della selezione corrente
+	gamestate->resetMouseHoverID();
+	gamestate->resetCurrentMinDistance();
+	
+	
+	
 
 }

@@ -101,7 +101,36 @@ void ModelListClass::SetData(int index, float positionX, float positionY, float 
 
 }
 
-void ModelListClass::SetColor(int index, XMFLOAT4 color){
+void ModelListClass::SetColor(int index, XMFLOAT4 c){
 
-	m_ModelInfoList[index].color = color;
+	if (index == -1){
+		int ciao = 45;
+	}
+
+	m_ModelInfoList[index].color = c;
+}
+
+XMFLOAT4 ModelListClass::GetColor(int index){
+
+	return m_ModelInfoList[index].color;
+}
+/*
+AabbClass ModelListClass::getBoundingBox(int index){
+
+	return m_ModelInfoList[index].boundingBox;
+}
+
+void ModelListClass::setBoundingBox(int index, AabbClass bb){
+
+	m_ModelInfoList[index].boundingBox = bb;
+}
+*/
+
+XMMATRIX ModelListClass::GetRotation(int index){
+
+	return m_ModelInfoList[index].rotationMatrix;
+}
+void ModelListClass::SetRotation(int index, XMMATRIX r){
+
+	m_ModelInfoList[index].rotationMatrix = r;
 }

@@ -19,9 +19,20 @@ GameStateClass::~GameStateClass()
 
 bool GameStateClass::Initialize()
 {
+	m_tMinDistance = 999999999;
 	m_mouseX, m_mouseY, m_oldMouseX, m_oldMouseY = -1;
 	m_SelectedId = -1;
+
+	leftMouseButtonIsClicked = false;
+	m_MouseHoverID = -1;
 	m_cubeRotationMatrix = XMMatrixIdentity();
+
+	leftMouseButtonWasClicked	= false;
+	leftMouseButtonIsDragged	= false;
+
+	leftMouseButtonWasReleased = false;
+
+	lock = false;
 
 	return true;
 }
@@ -79,18 +90,80 @@ int GameStateClass::getCurrentMinDistance()
 	return m_tMinDistance;
 }
 
-void GameStateClass::setClosestId(int id)
-{
-	m_ClosestId = id;
-}
 
-int GameStateClass::getClosestId()
-{
-	return m_ClosestId;
-}
 
 void GameStateClass::setCurrentMinDistance(double mindistance)
 {
 	m_tMinDistance = mindistance;
 
+}
+
+void GameStateClass::resetCurrentMinDistance()
+{
+	m_tMinDistance = 999999999;;
+
+}
+
+void GameStateClass::setMouseHoverID(int id)
+{
+	m_MouseHoverID = id;
+}
+
+int GameStateClass::getMouseHoverID()
+{
+	return m_MouseHoverID;
+}
+
+void GameStateClass::resetMouseHoverID(){
+	m_MouseHoverID = -1;
+}
+
+bool GameStateClass::isLeftMouseButtonClicked(){
+
+	return leftMouseButtonIsClicked;
+}
+
+void GameStateClass::setLeftMouseButtonClick(bool b){
+
+	leftMouseButtonIsClicked = b;
+}
+
+bool GameStateClass::LeftMouseButtonWasClicked(){
+
+	return leftMouseButtonWasClicked;
+}
+
+void GameStateClass::setLeftMouseButtonWasClicked(bool b){
+
+	leftMouseButtonWasClicked = b;
+}
+
+bool GameStateClass::LeftMouseButtonIsDragged(){
+
+	return leftMouseButtonIsDragged;
+}
+
+void GameStateClass::setLeftMouseButtonIsDragged(bool b){
+
+	leftMouseButtonIsDragged = b;
+}
+
+bool GameStateClass::LeftMouseButtonWasReleased(){
+
+	return leftMouseButtonWasReleased;
+}
+
+void GameStateClass::setLeftMouseButtonWasReleased(bool b){
+
+	leftMouseButtonWasReleased = b;
+}
+
+void GameStateClass::setLock(bool b){
+
+	lock = b;
+}
+
+bool GameStateClass::getLock(){
+
+	return lock;
 }

@@ -46,22 +46,45 @@ public:
 	void setCubeRotationMatrix(XMMATRIX);
 	XMMATRIX getCubeRotationMatrix();
 
-	int getClosestId();
+	
 	int getCurrentSelectedId();
 	int getCurrentHoverId();
 	int getCurrentMinDistance();
 	int getLastSelectedId();
 	int getLastHoverId();
 
-
-	void setClosestId(int);
+	
 	void setCurrentSelectedId(int);
+
 	void setCurrentHoverId(int);
-	void setCurrentMinDistance(double);
+	
 	void setLastSelectedId(int);
 	void setLastHoverId(int);
 	void setClicked(bool);
 	bool getClicked();
+
+	//NUOVE
+	void setCurrentMinDistance(double);
+	void resetCurrentMinDistance();
+
+	int getMouseHoverID();
+	void setMouseHoverID(int);
+	void resetMouseHoverID();
+
+	bool isLeftMouseButtonClicked();
+	void setLeftMouseButtonClick(bool);
+
+	bool LeftMouseButtonWasClicked();
+	void setLeftMouseButtonWasClicked(bool);
+
+	bool LeftMouseButtonIsDragged();
+	void setLeftMouseButtonIsDragged(bool);
+
+	bool LeftMouseButtonWasReleased();
+	void setLeftMouseButtonWasReleased(bool);
+
+	void setLock(bool);
+	bool getLock();
 
 private:
 	//bool Render();
@@ -73,10 +96,18 @@ private:
 	XMMATRIX m_cubeRotationMatrix;
 
 	//controllare cosa serve
-	int m_ClosestId, m_SelectedId, m_LastSelectedId, m_HoverId, m_LastHoverId;
+	int m_SelectedId, m_LastSelectedId, m_HoverId, m_LastHoverId;
 
-	bool wasClicked;
+
+	int m_MouseHoverID;
+	bool leftMouseButtonIsClicked;
+	bool leftMouseButtonWasClicked;
+	bool leftMouseButtonIsDragged;
+	bool leftMouseButtonWasReleased;
 	double m_tMinDistance;
+
+	//test
+	bool lock;
 
 };
 

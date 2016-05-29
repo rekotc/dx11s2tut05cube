@@ -226,14 +226,25 @@ LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam
 			// If a key is released then send it to the input object so it can unset the state for that key.
 			m_Input->keyUp((unsigned int)wparam);
 			return 0;
-		}		
+		}				
+
+		case WM_LBUTTONDOWN:
+		{
+			m_Input->setMouseLButton(true);
+			return 0;
+		}
+
+		case WM_LBUTTONUP:
+		{
+			m_Input->setMouseLButton(false);
+			return 0;
+		}
 
 		case WM_INPUT:                          // mouse data in
-			
-			m_Input->readCursorPos(hwnd);
-			m_GameState->setCurrentMousePos(m_Input->getCursorPosX(), m_Input->getCursorPosY());
-			return 0;
 
+			m_Input->readCursorPos(hwnd);
+
+			return 0;
 		// Any other messages send to the default message handler as our application won't make use of them.
 		default:
 		{

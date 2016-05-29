@@ -126,6 +126,8 @@
     <ClInclude Include="gamestateclass.h" />
     <ClInclude Include="graphicsclass.h" />
     <ClInclude Include="inputclass.h" />
+    <ClInclude Include="lightclass.h" />
+    <ClInclude Include="lightshaderclass.h" />
     <ClInclude Include="modelclass.h" />
     <ClInclude Include="modellistclass.h" />
     <ClInclude Include="systemclass.h" />
@@ -141,6 +143,8 @@
     <ClCompile Include="gamestateclass.cpp" />
     <ClCompile Include="graphicsclass.cpp" />
     <ClCompile Include="inputclass.cpp" />
+    <ClCompile Include="lightclass.cpp" />
+    <ClCompile Include="lightshaderclass.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="modelclass.cpp" />
     <ClCompile Include="modellistclass.cpp" />
@@ -149,6 +153,8 @@
     <ClCompile Include="textureshaderclass.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="light.ps" />
+    <None Include="light.vs" />
     <None Include="packages.config" />
     <None Include="texture.ps" />
     <None Include="texture.vs" />
