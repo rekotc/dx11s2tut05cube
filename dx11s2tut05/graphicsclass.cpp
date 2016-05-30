@@ -314,10 +314,10 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, ConsoleCl
 			console->appendMessage("Il mouse e' ora posizionato sul cubo con ID "+std::to_string(gamestate->getMouseHoverID()));
 			//verifico se c'è da completare una rotazione
 			if (gamestate->getCubeIsBeingRotated()==true){
-				CompleteRotation(gamestate, m_ModelList);
-				gamestate->setCubeIsBeingRotated(false);
 				console->appendMessage("Devo completare una rotazione sul cubo con ID " + std::to_string(gamestate->getMouseHoverID()));
-			}
+				CompleteRotation(gamestate, m_ModelList, console);
+				gamestate->setCubeIsBeingRotated(false);
+					}
 			//verifico nuove intersezioni
 			TestIntersection(gamestate);
 			//aggiorno il colore del cubo in base all'EVENTUALE intersezione trovata.
@@ -328,7 +328,7 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, ConsoleCl
 	//ruoto il cubo EVENTUALMENTE selezionato
 	//prima verifico se gamestate ha un cubo selezionato oppure no e se sto trascinando l'oggetto, se NO la funzione non viene chiamata
 	if (gamestate->getMouseHoverID() != -1 && gamestate->LeftMouseButtonIsDragged()==true)
-		RotateCube(gamestate);
+		RotateCube(gamestate,m_FrameCounter);
 	// Render the graphics scene.
 	result = Render(gamestate,console);
 	if (!result)
@@ -422,9 +422,6 @@ bool GraphicsClass::Render(GameStateClass* gamestate, ConsoleClass* console )
 	m_Direct3D->TurnZBufferOff();
 	// Turn on alpha blending.
 	m_Direct3D->EnableAlphaBlending();
-	// Render the mouse cursor with the texture shader.
-	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), gamestate->getCurrentMouseX(), gamestate->getCurrentMouseY(), m_FrameCounter);  if (!result) { return false; }
-	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
 	
 	//Visualizza la console dei messaggi
 	if (gamestate->getConsoleEnabled()==true){
@@ -464,7 +461,10 @@ bool GraphicsClass::Render(GameStateClass* gamestate, ConsoleClass* console )
 
 	}
 
-	
+	// Render the mouse cursor with the texture shader.
+	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), gamestate->getCurrentMouseX(), gamestate->getCurrentMouseY(), m_FrameCounter);  if (!result) { return false; }
+	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
+
 	// Turn off alpha blending.
 	m_Direct3D->DisableAlphaBlending();
 	// Turn the Z buffer back on now that all 2D rendering has completed.
@@ -518,8 +518,7 @@ void GraphicsClass::TestIntersection(GameStateClass* gamestate)
 	origin = m_Camera->GetPosition();
 
 	// Get the number of models that will be rendered.
-	modelCount = m_ModelList->GetModelCount();
-	
+	modelCount = m_ModelList->GetModelCount();	
 
 	XMFLOAT3 position;
 	XMFLOAT4 color;
@@ -633,8 +632,11 @@ bool GraphicsClass::RayAABBIntersect(bool debug, GameStateClass* gamestate, int 
 
 }
 
-void GraphicsClass::RotateCube(GameStateClass* GameState){
+void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter){
 
+
+	float angleAroundX = 0.0f;
+	float angleAroundY = 0.0f;
 
 	int selectedID = GameState->getMouseHoverID();
 	XMMATRIX cubeRotation = m_ModelList->GetRotation(selectedID);
@@ -649,13 +651,10 @@ void GraphicsClass::RotateCube(GameStateClass* GameState){
 	XMFLOAT3 yaxisF = XMFLOAT3(1.0f, 0.0f, 0.0f);
 	XMVECTOR yaxisV = XMLoadFloat3(&yaxisF);
 
-
 	int deltaX, deltaY;
 
 	deltaX = m_mouseX - m_oldMouseX;
 	deltaY = m_mouseY - m_oldMouseY;
-
-
 
 	//se lo spostamento è maggiore lungo X, allora ruoto su asse Y
 	if (abs(deltaX) >= abs(deltaY)){
@@ -663,14 +662,14 @@ void GraphicsClass::RotateCube(GameStateClass* GameState){
 		//muovo verso dx il mouse
 		if (deltaX > 0){
 
-			angle = -0.1f;
-			cubeRotation *= XMMatrixRotationAxis(axisV, angle);
+			angleAroundY = -0.1f;
+			cubeRotation *= XMMatrixRotationAxis(axisV, angleAroundY);
 		}
 		else //muovo verso sx il mouse
 			if (deltaX < 0){
 
-				angle = 0.1f;
-				cubeRotation *= XMMatrixRotationAxis(axisV, angle);
+				angleAroundY = 0.1f;
+				cubeRotation *= XMMatrixRotationAxis(axisV, angleAroundY);
 			}
 
 	}
@@ -679,22 +678,39 @@ void GraphicsClass::RotateCube(GameStateClass* GameState){
 		//muovo verso alto il mouse
 		if (deltaY > 0){
 
-			angle = -0.1f;
-			cubeRotation *= XMMatrixRotationAxis(yaxisV, angle);
+			angleAroundX = -0.1f;
+			cubeRotation *= XMMatrixRotationAxis(yaxisV, angleAroundX);
 		}
 		else
 			//muovo verso basso il mouse
 			if (deltaY < 0){
 
-				angle = 0.1f;
-				cubeRotation *= XMMatrixRotationAxis(yaxisV, angle);
+				angleAroundX = 0.1f;
+				cubeRotation *= XMMatrixRotationAxis(yaxisV, angleAroundX);
 
 			}
 	}
 
 
-	//aggiorno il gamestate
+	//aggiorno la rotazione sul singolo modello
 	m_ModelList->SetRotation(selectedID, cubeRotation);
+
+	float rotX = m_ModelList->getRotX(selectedID) + angleAroundX;
+	float rotY = m_ModelList->getRotY(selectedID) + angleAroundY;
+
+	//devo impedire che l'angolo di rotazione cresca oltre 2pigreco, infatti una rotazione di 2pigreco corrisponde a ZERO gradi
+	rotX = (abs(rotX) >= XM_2PI) ? 0.0f : rotX;
+	rotY = (abs(rotY) >= XM_2PI) ? 0.0f : rotY;
+
+	m_ModelList->setRotX(selectedID, rotX);
+	m_ModelList->setRotY(selectedID, rotY);
+
+
+	if (framecounter >= 1000){
+
+		int ciao = 45;
+	}
+
 	//GameState->setCubeRotationMatrix(cubeRotation);
 	GameState->setOldMousePos(m_mouseX, m_mouseY);
 }
@@ -747,8 +763,54 @@ void GraphicsClass::resetSelection(GameStateClass* gamestate, ModelListClass* mo
 
 }
 
-void GraphicsClass::CompleteRotation(GameStateClass* gamestate, ModelListClass* modellist){
+void GraphicsClass::CompleteRotation(GameStateClass* gamestate, ModelListClass* modellist, ConsoleClass* console){
 
 
+	XMMATRIX CubeRotation = modellist->GetRotation(gamestate->getMouseHoverID());
+	//cuberotation
+	XMFLOAT4X4 fCubeRotation;
+	XMStoreFloat4x4(&fCubeRotation, CubeRotation);
+	//console->appendMessage("");
+
+	float rotY = modellist->getRotY(gamestate->getMouseHoverID());
+	float rotX = modellist->getRotX(gamestate->getMouseHoverID());
 	
+	//Roba vecchia, controllare
+
+	float angles[5] = { 0.0f, XM_PIDIV2, XM_PI, 1.5f*XM_PI, XM_2PI };
+	//valore arbitrario ma più grande dei valori ottenibili con calculateDelta();
+	float delta = 4 * XM_PI;
+	float temp;
+	float chosenAngle = 0.0f;
+	float extraRot = 0.0f;
+	
+	//ROTAZIONE Y
+	for (int i = 0; i < 5; i++){
+
+		temp = calculateDelta(rotY, angles[i]);
+
+		if (temp < delta){
+			delta = temp;
+			chosenAngle = angles[i];
+		}
+
+	}
+	rotY = (rotY >= 0) ? chosenAngle : -chosenAngle;
+	int test = 56;
+
+	XMFLOAT3 axisF = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	XMVECTOR axisV = XMLoadFloat3(&axisF);
+	XMMATRIX cubeRotation = XMMatrixIdentity();
+	cubeRotation *= XMMatrixRotationAxis(axisV, rotY);
+	modellist->SetRotation(gamestate->getMouseHoverID(),cubeRotation);
+	modellist->setRotY(gamestate->getMouseHoverID(),rotY);
+	
+}
+
+float GraphicsClass::calculateDelta(float r, float a){
+
+	float angle = a;
+	float delta = angle - abs(r);
+
+	return abs(delta);
 }

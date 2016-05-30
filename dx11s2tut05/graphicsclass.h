@@ -49,9 +49,10 @@ private:
 	void TestIntersection(GameStateClass*);
 	bool RayAABBIntersect(bool, GameStateClass*, int, XMVECTOR , XMVECTOR, AabbClass*);
 	void UpdateCubeColors(GameStateClass*);
-	void RotateCube(GameStateClass*);
+	void RotateCube(GameStateClass*, int);
 
-	static void CompleteRotation(GameStateClass*, ModelListClass*);
+	static void CompleteRotation(GameStateClass*, ModelListClass*, ConsoleClass*);
+	static float calculateDelta(float, float);
 
 	static void resetSelection(GameStateClass*, ModelListClass*);
 
@@ -76,7 +77,7 @@ private:
 	
 	int m_mouseX, m_mouseY;
 	int m_oldMouseX, m_oldMouseY;
-	float angle;
+	
 
 	XMMATRIX cubeRotation;
 	int m_screenWidth, m_screenHeight;

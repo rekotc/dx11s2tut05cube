@@ -50,7 +50,7 @@ bool SystemClass::Initialize()
 		return false;
 	}
 
-	m_Console->appendMessage("Console avviata correttamente - Inizio log messaggi: ");
+	m_Console->appendMessage("Console inizializzata correttamente - Inizio log messaggi: ");
 
 	// Create the input object.  This object will be used to handle reading the keyboard input from the user.
 	m_Input = new InputClass;
@@ -210,6 +210,7 @@ bool SystemClass::Frame()
 	// Check if the user pressed escape and wants to exit the application.
 	if(m_Input->isKeyDown(VK_ESCAPE))
 	{
+		m_Console->appendMessage("Hai premuto ESC, chiudo l'applicazione ");
 		return false;
 	}	
 	

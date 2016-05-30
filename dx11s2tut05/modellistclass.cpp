@@ -55,6 +55,9 @@ bool ModelListClass::Initialize(int numModels)
 		m_ModelInfoList[i].positionZ = ((((float)rand()-(float)rand())/RAND_MAX) * 10.0f) + 5.0f;
 		m_ModelInfoList[i].id = i;
 		m_ModelInfoList[i].rotationMatrix = XMMatrixIdentity();
+		m_ModelInfoList[i].rotX = 0.0f;
+		m_ModelInfoList[i].rotY = 0.0f;
+		m_ModelInfoList[i].rotZ = 0.0f;
 	}
 
 	return true;
@@ -133,4 +136,28 @@ XMMATRIX ModelListClass::GetRotation(int index){
 void ModelListClass::SetRotation(int index, XMMATRIX r){
 
 	m_ModelInfoList[index].rotationMatrix = r;
+}
+
+float ModelListClass::getRotX(int index){
+	return m_ModelInfoList[index].rotX;
+}
+float ModelListClass::getRotY(int index){
+	return m_ModelInfoList[index].rotY;
+}
+float ModelListClass::getRotZ(int index){
+	return m_ModelInfoList[index].rotZ;
+}
+
+void ModelListClass::setRotX(int index, float r){
+	m_ModelInfoList[index].rotX = r;
+}
+void ModelListClass::setRotY(int index, float r){
+	m_ModelInfoList[index].rotY = r;
+}
+void ModelListClass::setRotZ(int index, float r){
+	m_ModelInfoList[index].rotZ = r;
+}
+
+void ModelListClass::resetCubeRotation(int index){
+	m_ModelInfoList[index].rotationMatrix = XMMatrixIdentity();
 }

@@ -24,8 +24,8 @@ private:
 		XMFLOAT4 color;
 		float positionX, positionY, positionZ;
 		XMMATRIX rotationMatrix;
+		float rotX, rotY, rotZ;
 		int id;
-		//AabbClass boundingBox;
 	};
 
 public:
@@ -40,7 +40,18 @@ public:
 	void GetData(int, float&, float&, float&, XMFLOAT4&, XMMATRIX&);
 	void SetData(int, float, float, float);
 	void SetColor(int, XMFLOAT4);
+
+	void resetCubeRotation(int);
+
 	XMFLOAT4 GetColor(int);
+
+	float getRotX(int);
+	float getRotY(int);
+	float getRotZ(int);
+
+    void setRotX(int, float);
+	void setRotY(int, float);
+	void setRotZ(int, float);
 
 	XMMATRIX GetRotation(int);
 	void SetRotation(int,XMMATRIX);
