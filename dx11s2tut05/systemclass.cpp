@@ -10,6 +10,7 @@ SystemClass::SystemClass()
 	m_Graphics = 0;
 	m_GameLogic = 0;
 	m_GameState = 0;
+	m_Console = 0;
 	
 }
 
@@ -36,6 +37,20 @@ bool SystemClass::Initialize()
 
 	// Initialize the windows api.
 	InitializeWindows(screenWidth, screenHeight);
+
+	m_Console = new ConsoleClass;
+	if (!m_Console)
+	{
+		return false;
+	}
+	//initialize the console log
+	result = m_Console->Initialize();
+	if (!result)
+	{
+		return false;
+	}
+
+	m_Console->appendMessage("Console avviata correttamente - Inizio log messaggi: ");
 
 	// Create the input object.  This object will be used to handle reading the keyboard input from the user.
 	m_Input = new InputClass;
@@ -86,6 +101,8 @@ bool SystemClass::Initialize()
 	}
 
 	
+
+	
 	return true;
 }
 
@@ -121,6 +138,12 @@ void SystemClass::Shutdown()
 		m_GameState = 0;
 	}
 
+	// Release the gamestate object.
+	if (m_Console)
+	{
+		delete m_Console;
+		m_Console = 0;
+	}
 
 	// Shutdown the window.
 	ShutdownWindows();
@@ -191,14 +214,14 @@ bool SystemClass::Frame()
 	}	
 	
 	//Do the frame processing for the game logic
-	result = m_GameLogic->Frame(m_GameState, m_Input);
+	result = m_GameLogic->Frame(m_GameState, m_Input, m_Console);
 	if (!result)
 	{
 		return false;
 	}
 
 	// Do the frame processing for the graphics object.
-	result = m_Graphics->Frame(m_GameState, m_FrameCounter);
+	result = m_Graphics->Frame(m_GameState, m_FrameCounter, m_Console);
 	if(!result)
 	{
 		return false;

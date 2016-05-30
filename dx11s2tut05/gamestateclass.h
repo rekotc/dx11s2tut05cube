@@ -71,6 +71,9 @@ public:
 	void setMouseHoverID(int);
 	void resetMouseHoverID();
 
+	void setPreviousMouseHoverID(int);
+	int getPreviousMouseHoverID();
+
 	bool isLeftMouseButtonClicked();
 	void setLeftMouseButtonClick(bool);
 
@@ -86,6 +89,12 @@ public:
 	void setLock(bool);
 	bool getLock();
 
+	void setConsoleEnabled(bool);
+	bool getConsoleEnabled();
+
+	void setCubeIsBeingRotated(bool);
+	bool getCubeIsBeingRotated();
+
 private:
 	//bool Render();
 
@@ -100,11 +109,15 @@ private:
 
 
 	int m_MouseHoverID;
+	int m_PreviousMouseHoverID;
+	bool m_CubeIsBeingRotated;
 	bool leftMouseButtonIsClicked;
 	bool leftMouseButtonWasClicked;
 	bool leftMouseButtonIsDragged;
 	bool leftMouseButtonWasReleased;
 	double m_tMinDistance;
+
+	bool consoleEnabled;
 
 	//test
 	bool lock;

@@ -25,6 +25,7 @@
 #include "graphicsclass.h"
 #include "gamelogicclass.h"
 #include "gamestateclass.h"
+#include "consoleclass.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,6 +60,7 @@ private:
 	GraphicsClass* m_Graphics;
 	GameLogicClass* m_GameLogic;
 	GameStateClass* m_GameState;
+	ConsoleClass* m_Console;
 };
 
 

@@ -36,8 +36,10 @@ public:
 	~BitmapClass();
 
 	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, int, int, char*, int, int);
+	bool InitializeConsoleUI(ID3D11Device*, ID3D11DeviceContext*, int, int, char*, int, int);
 	void Shutdown();
 	bool Render(ID3D11DeviceContext*, int, int,int);
+	bool Render(ID3D11DeviceContext*);
 
 	int GetIndexCount();
 	ID3D11ShaderResourceView* GetTexture();

@@ -17,6 +17,10 @@ GraphicsClass::GraphicsClass()
 	m_Bitmap = 0;
 	m_ModelList = 0;
 
+	m_Background = 0;
+	m_Text		= 0;
+	m_ConsoleGUI	= 0;
+
 
 }
 
@@ -125,6 +129,51 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// Create the text object.
+	m_Text = new TextClass;
+	if (!m_Text)
+	{
+		return false;
+	}
+
+	// Initialize the text object.
+	result = m_Text->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), hwnd, screenWidth, screenHeight, baseViewMatrix, 20, 20);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the text object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the ConsoleGUI object.
+	m_ConsoleGUI = new BitmapClass;
+	if (!m_ConsoleGUI)
+	{
+		return false;
+	}
+
+	// Initialize the ConsoleGUI object.
+	result = m_ConsoleGUI->InitializeConsoleUI(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), screenWidth, screenHeight, "../data/console-background.tga", 1920, 1080);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the console object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the bitmap object.
+	m_Background = new BitmapClass;
+	if (!m_Background)
+	{
+		return false;
+	}
+
+	// Initialize the bitmap object.
+	result = m_Background->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), screenWidth, screenHeight, "../data/violet-game-background.tga", 1920, 1200);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the background object.", L"Error", MB_OK);
+		return false;
+	}
+
 	// Create the texture shader object.
 	m_TextureShader = new TextureShaderClass;
 	if (!m_TextureShader)
@@ -196,6 +245,22 @@ void GraphicsClass::Shutdown()
 		m_Bitmap = 0;
 	}
 
+	// Release the model object.
+	if (m_ConsoleGUI)
+	{
+		m_ConsoleGUI->Shutdown();
+		delete m_ConsoleGUI;
+		m_ConsoleGUI = 0;
+	}
+
+	// Release the model object.
+	if (m_Background)
+	{
+		m_Background->Shutdown();
+		delete m_Background;
+		m_Background = 0;
+	}
+
 	// Release the camera object.
 	if (m_Camera)
 	{
@@ -211,15 +276,30 @@ void GraphicsClass::Shutdown()
 		m_Direct3D = 0;
 	}
 
+	// Release the text object.
+	if (m_Text)
+	{
+		m_Text->Shutdown();
+		delete m_Text;
+		m_Text = 0;
+	}
+
+
 	return;
 }
 
 
-bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter)
+bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, ConsoleClass* console)
 {
 	bool result;
 	m_FrameCounter = framecounter;
 	
+	
+
+	if (m_FrameCounter == 500){
+
+		int ciao = 45;
+	}
 	
 		//test, il lock è true se ho rilasciato la selezione sul cubo
 		if (gamestate->getLock()==true){
@@ -227,6 +307,18 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter)
 		}
 		//verifico l'intersezione, a meno che non stia già trascinando un cubo
 		if (gamestate->LeftMouseButtonIsDragged() == false){
+
+			int curid = gamestate->getMouseHoverID();
+			//se c'è una intersezione ed è diversa da una eventualmente precedente, scrivo il messaggio
+			if ( curid != -1 && ( curid != gamestate->getPreviousMouseHoverID()) )
+			console->appendMessage("Il mouse e' ora posizionato sul cubo con ID "+std::to_string(gamestate->getMouseHoverID()));
+			//verifico se c'è da completare una rotazione
+			if (gamestate->getCubeIsBeingRotated()==true){
+				CompleteRotation(gamestate, m_ModelList);
+				gamestate->setCubeIsBeingRotated(false);
+				console->appendMessage("Devo completare una rotazione sul cubo con ID " + std::to_string(gamestate->getMouseHoverID()));
+			}
+			//verifico nuove intersezioni
 			TestIntersection(gamestate);
 			//aggiorno il colore del cubo in base all'EVENTUALE intersezione trovata.
 			UpdateCubeColors(gamestate);
@@ -238,7 +330,7 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter)
 	if (gamestate->getMouseHoverID() != -1 && gamestate->LeftMouseButtonIsDragged()==true)
 		RotateCube(gamestate);
 	// Render the graphics scene.
-	result = Render(gamestate);
+	result = Render(gamestate,console);
 	if (!result)
 	{
 		return false;
@@ -248,7 +340,7 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter)
 }
 
 
-bool GraphicsClass::Render(GameStateClass* gamestate )
+bool GraphicsClass::Render(GameStateClass* gamestate, ConsoleClass* console )
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
 	XMMATRIX translateMatrix, rotateMatrix;
@@ -269,6 +361,20 @@ bool GraphicsClass::Render(GameStateClass* gamestate )
 	//necessaria per rendering 2D
 	m_Direct3D->GetOrthoMatrix(orthoMatrix);
 		
+	//BACKGROUND
+	// Turn off the Z buffer to begin all 2D rendering.
+	m_Direct3D->TurnZBufferOff();
+	// Turn on alpha blending.
+	m_Direct3D->EnableAlphaBlending();
+	// Render the mouse cursor with the texture shader.
+	result = m_Background->Render(m_Direct3D->GetDeviceContext(), 0.0f, 0.0f, m_FrameCounter);  if (!result) { return false; }
+	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Background->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Background->GetTexture());
+		// Turn off alpha blending.
+	m_Direct3D->DisableAlphaBlending();
+	// Turn the Z buffer back on now that all 2D rendering has completed.
+	m_Direct3D->TurnZBufferOn();
+
+
 	for (index = 0; index < m_ModelList->GetModelCount(); index++)
 	{
 
@@ -319,6 +425,45 @@ bool GraphicsClass::Render(GameStateClass* gamestate )
 	// Render the mouse cursor with the texture shader.
 	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), gamestate->getCurrentMouseX(), gamestate->getCurrentMouseY(), m_FrameCounter);  if (!result) { return false; }
 	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
+	
+	//Visualizza la console dei messaggi
+	if (gamestate->getConsoleEnabled()==true){
+		//Remder the console background with the texture shader
+		result = m_ConsoleGUI->Render(m_Direct3D->GetDeviceContext(), 10, 0, m_FrameCounter);  if (!result) { return false; }
+		result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_ConsoleGUI->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_ConsoleGUI->GetTexture());
+		//recupero il numero totale di messaggi inseriti
+		int size = console->getNumberOfMessages();
+		int numMess = 0;
+		int index = 0;
+		//se la coda messaggi è più corta del limite, visualizzero la coda interamente
+		if ((MAX_MESSAGES_SHOWN - size) >= 0){
+			numMess = size;
+			index = 0;
+		}
+		else{
+			//altrimenti visualizzerò tutti i messaggi a partire da index e fino a size
+			index = (size - MAX_MESSAGES_SHOWN);
+			numMess = size;		
+		}
+		int posY = 10.0f;
+
+		for (index; index < numMess;index++){
+			//Qui devo renderizzare i messaggi d'errore dell'oggetto m_Console
+			m_Text->SetMessage(console->getMessage(index), posY, m_Direct3D->GetDeviceContext());
+			// Render the text strings.
+			result = m_Text->Render(m_Direct3D->GetDeviceContext(), worldMatrix, orthoMatrix);
+			if (!result)
+			{
+				return false;
+			}
+
+			//mi sposto un po' più in basso sullo schermo
+			posY += 16.0f;
+		}
+		
+
+	}
+
 	
 	// Turn off alpha blending.
 	m_Direct3D->DisableAlphaBlending();
@@ -385,9 +530,12 @@ void GraphicsClass::TestIntersection(GameStateClass* gamestate)
 	XMVECTOR rayDirectionV = XMLoadFloat3(&rayDirection);
 	XMVECTOR directionV = XMLoadFloat3(&direction);
 
-	//se c'era qualcosa di selezionato, lo resetto.
-	if (gamestate->getMouseHoverID() != -1 )
+	int curid = gamestate->getMouseHoverID();
+	//se c'era qualcosa di selezionato, lo salvo come id precedente, poi lo resetto.
+	if ( curid != -1){
+		gamestate->setPreviousMouseHoverID(curid);
 		resetSelection(gamestate, m_ModelList);
+	}
 
 
 		//al termine di questo ciclo, gamestate->closestID() ovvero l'id del cubo su cui è posizionato il mouse
@@ -418,6 +566,11 @@ void GraphicsClass::TestIntersection(GameStateClass* gamestate)
 
 		}
 	
+		//se ho trovato un'intersezione e sto tenendo premuto il mouse, vuol dire che è in atto una rotazione
+		if ((gamestate->getMouseHoverID() != -1) && (gamestate->isLeftMouseButtonClicked())){
+			//salvo la corrispondente variabile
+			gamestate->setCubeIsBeingRotated(true);
+		}
 	
 
 }
@@ -592,4 +745,10 @@ void GraphicsClass::resetSelection(GameStateClass* gamestate, ModelListClass* mo
 	
 	
 
+}
+
+void GraphicsClass::CompleteRotation(GameStateClass* gamestate, ModelListClass* modellist){
+
+
+	
 }

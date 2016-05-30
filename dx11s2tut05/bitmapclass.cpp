@@ -36,8 +36,8 @@ bool BitmapClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceCo
 	m_bitmapHeight = bitmapHeight;
 
 	// Initialize the previous rendering position to negative one.
-	m_previousPosX = -1;
-	m_previousPosY = -1;
+	m_previousPosX = 100;
+	m_previousPosY = 100;
 
 	// Initialize the vertex and index buffers.
 	result = InitializeBuffers(device);
@@ -56,6 +56,39 @@ bool BitmapClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceCo
 	return true;
 }
 
+bool BitmapClass::InitializeConsoleUI(ID3D11Device* device, ID3D11DeviceContext* deviceContext, int screenWidth, int screenHeight, char* textureFilename, int bitmapWidth, int bitmapHeight)
+{
+	bool result;
+
+
+	// Store the screen size.
+	m_screenWidth = screenWidth;
+	m_screenHeight = screenHeight;
+
+	// Store the size in pixels that this bitmap should be rendered at.
+	m_bitmapWidth = screenWidth;
+	m_bitmapHeight = 300;
+
+	// Initialize the previous rendering position to negative one.
+	m_previousPosX = 0;
+	m_previousPosY = 0;
+
+	// Initialize the vertex and index buffers.
+	result = InitializeBuffers(device);
+	if (!result)
+	{
+		return false;
+	}
+
+	// Load the texture for this bitmap.
+	result = LoadTexture(device, deviceContext, textureFilename);
+	if (!result)
+	{
+		return false;
+	}
+
+	return true;
+}
 
 void BitmapClass::Shutdown()
 {
@@ -81,6 +114,23 @@ bool BitmapClass::Render(ID3D11DeviceContext* deviceContext, int positionX, int 
 	{
 		return false;
 	}
+
+	// Put the vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	RenderBuffers(deviceContext);
+
+	return true;
+}
+
+bool BitmapClass::Render(ID3D11DeviceContext* deviceContext)
+{
+	bool result;	
+
+	// Re-build the dynamic vertex buffer for rendering to possibly a different location on the screen.
+	/*result = UpdateBuffers(deviceContext);
+	if (!result)
+	{
+		return false;
+	}*/
 
 	// Put the vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	RenderBuffers(deviceContext);
@@ -224,12 +274,10 @@ bool BitmapClass::UpdateBuffers(ID3D11DeviceContext* deviceContext, int position
 
 	// If the position we are rendering this bitmap to has not changed then don't update the vertex buffer since it
 	// currently has the correct parameters.
-	/*if((positionX == m_previousPosX) && (positionY == m_previousPosY))
+	if((positionX == m_previousPosX) && (positionY == m_previousPosY))
 	{
 		return true;
-	}*/
-	
-
+	}
 
 	// If it has changed then update the position it is being rendered to.
 	m_previousPosX = positionX;

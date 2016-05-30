@@ -25,6 +25,7 @@ bool GameStateClass::Initialize()
 
 	leftMouseButtonIsClicked = false;
 	m_MouseHoverID = -1;
+	m_PreviousMouseHoverID = -1;
 	m_cubeRotationMatrix = XMMatrixIdentity();
 
 	leftMouseButtonWasClicked	= false;
@@ -32,7 +33,10 @@ bool GameStateClass::Initialize()
 
 	leftMouseButtonWasReleased = false;
 
+	m_CubeIsBeingRotated = false;
+
 	lock = false;
+	consoleEnabled = false;
 
 	return true;
 }
@@ -166,4 +170,32 @@ void GameStateClass::setLock(bool b){
 bool GameStateClass::getLock(){
 
 	return lock;
+}
+
+void GameStateClass::setConsoleEnabled(bool c){
+
+	consoleEnabled = c;
+}
+bool GameStateClass::getConsoleEnabled(){
+
+	return consoleEnabled;
+}
+
+void GameStateClass::setPreviousMouseHoverID(int p){
+
+	m_PreviousMouseHoverID = p;
+}
+int GameStateClass::getPreviousMouseHoverID(){
+
+	return m_PreviousMouseHoverID;
+}
+
+void GameStateClass::setCubeIsBeingRotated(bool c){
+
+	m_CubeIsBeingRotated = c;
+}
+
+bool GameStateClass::getCubeIsBeingRotated(){
+
+	return m_CubeIsBeingRotated;
 }

@@ -8,6 +8,7 @@
 ///////////////////////
 // MY CLASS INCLUDES //
 ///////////////////////
+#include <string>
 #include "d3dclass.h"
 #include "cameraclass.h"
 #include "modelclass.h"
@@ -17,6 +18,8 @@
 #include "modellistclass.h"
 #include "lightshaderclass.h"
 #include "lightclass.h"
+#include "textclass.h"
+#include "consoleclass.h"
 
 /////////////
 // GLOBALS //
@@ -39,14 +42,16 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame(GameStateClass*, int);
+	bool Frame(GameStateClass*, int, ConsoleClass*);
 
 private:
-	bool Render(GameStateClass*);
+	bool Render(GameStateClass*, ConsoleClass*);
 	void TestIntersection(GameStateClass*);
 	bool RayAABBIntersect(bool, GameStateClass*, int, XMVECTOR , XMVECTOR, AabbClass*);
 	void UpdateCubeColors(GameStateClass*);
 	void RotateCube(GameStateClass*);
+
+	static void CompleteRotation(GameStateClass*, ModelListClass*);
 
 	static void resetSelection(GameStateClass*, ModelListClass*);
 
@@ -55,6 +60,10 @@ private:
 	CameraClass* m_Camera;
 	BitmapClass* m_Bitmap;
 	ModelClass* m_Model;
+
+	BitmapClass* m_Background;
+	BitmapClass* m_ConsoleGUI;
+	TextClass* m_Text;
 
 	TextureShaderClass* m_TextureShader;
 	LightShaderClass* m_LightShader;

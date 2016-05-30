@@ -10,6 +10,7 @@
 ///////////////////////
 #include "gamestateclass.h"
 #include "inputclass.h"
+#include "consoleclass.h"
 
 /////////////
 // GLOBALS //
@@ -34,14 +35,14 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame(GameStateClass*, InputClass*);
+	bool Frame(GameStateClass*, InputClass*, ConsoleClass*);
 
 	//bool Render();
 	
 
 private:
 	
-	bool HandleInput(GameStateClass*, InputClass*);
+	bool HandleInput(GameStateClass*, InputClass*, ConsoleClass*);
 
 private:
 	int m_mouseX, m_mouseY;

@@ -17,19 +17,19 @@ GameLogicClass::~GameLogicClass()
 {
 }
 
-bool GameLogicClass::Frame(GameStateClass* GameState, InputClass* input)
+bool GameLogicClass::Frame(GameStateClass* GameState, InputClass* input, ConsoleClass* console)
 {
 
 	//XMMATRIX cubeRotation = GameState->getCubeRotationMatrix();
 	
-	HandleInput(GameState, input);
+	HandleInput(GameState, input, console);
 
 	return true;
 }
 
 //questa funzione deve verificare lo stato del mouse e settare i relativi parametri in GameState
 //in modo tale che poi, nella classe graphicsclass, sia possibile eseguire tutte le operazioni di picking/intersection/ecc
-bool GameLogicClass::HandleInput(GameStateClass* gamestate, InputClass* input)
+bool GameLogicClass::HandleInput(GameStateClass* gamestate, InputClass* input, ConsoleClass* console)
 {
 	bool result, onClick;
 	int mouseX, mouseY;
@@ -37,11 +37,23 @@ bool GameLogicClass::HandleInput(GameStateClass* gamestate, InputClass* input)
 	gamestate->setCurrentMousePos(input->getCursorPosX(), input->getCursorPosY());
 
 
-	short test = input->getMouseLButtonT();
-	if (test == 1){
 
-		int ciao = 98;
+
+	//se nel frame corrente è stato premuto f1 e la console era disabilitata, attivala
+	if (input->wasKeyPressed(VK_F1) && gamestate->getConsoleEnabled() == false){
+		gamestate->setConsoleEnabled(true);
+		console->appendMessage("Hai aperto la console");
+		input->clearKeyPress(VK_F1);
 	}
+	else
+	//se nel frame corrente è stato premuto f1 e la console era abilitata, disattivala
+	if (input->wasKeyPressed(VK_F1) && gamestate->getConsoleEnabled() == true){
+		gamestate->setConsoleEnabled(false);
+		console->appendMessage("Hai chiuso la console");
+		input->clearKeyPress(VK_F1);
+	}
+		
+	
 	//salvo lo stato del left mouse button
 	gamestate->setLeftMouseButtonClick(input->getMouseLButton());
 
