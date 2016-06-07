@@ -317,6 +317,12 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, float tim
 				console->appendMessage("Devo completare una rotazione sul cubo con ID " + std::to_string(gamestate->getMouseHoverID()));
 				CompleteRotation(gamestate, m_ModelList, console);
 				gamestate->setCubeIsBeingRotated(false);
+				//resetto i sumDelta
+				gamestate->setSumDeltaX(0);
+				gamestate->setSumDeltaY(0);
+				//setto a OFF il timer
+				gamestate->setTimerIsActive(false);
+				//TODO reset
 					}
 			//verifico nuove intersezioni
 			TestIntersection(gamestate);
@@ -327,8 +333,17 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, float tim
 	
 	//ruoto il cubo EVENTUALMENTE selezionato
 	//prima verifico se gamestate ha un cubo selezionato oppure no e se sto trascinando l'oggetto, se NO la funzione non viene chiamata
-	if (gamestate->getMouseHoverID() != -1 && gamestate->LeftMouseButtonIsDragged()==true)
-		RotateCube(gamestate,m_FrameCounter,time,console);
+		if (gamestate->getMouseHoverID() != -1 && gamestate->LeftMouseButtonIsDragged() == true){
+
+			//aggiorno il timer corrente nello stato di gioco, se non è già attivo
+			if (!gamestate->getTimerIsActive()){
+				gamestate->setTimeSinceLock(time);
+				//setto il timer ON
+				gamestate->setTimerIsActive(true);
+			}else
+				RotateCube(gamestate, m_FrameCounter, time, console);
+		}
+		
 	// Render the graphics scene.
 	result = Render(gamestate,console);
 	if (!result)
@@ -656,27 +671,45 @@ void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter, floa
 	deltaX = m_mouseX - m_oldMouseX;
 	deltaY = m_mouseY - m_oldMouseY;
 
-	//se lockX && lockY sono entrambi false, calcolo il delta.
+	
 	//se deltaX > deltaY lockX = true, altrimenti lockY = true.
 		
 	//l'idea di base è di sommare i delta X e Y in un brevissimo intervallo di tempo, e prendere come direzione di
 	//rotazione quella che ha come somma dei delta il valore maggiore.
 	//Quindi, fintanto che questo tempo non è passato, vado a sommare, per ogni frame, i relativi delta, e poi, ad esaurimento
 	//del timer, valuto la situazione.
-	//se infatti nei, poniamo, 3 fotogrammi successivi, il delta sarà:
+	//se infatti nei, poniamo, 3 fotogrammi successivi, i deltaX e Y saranno stati:
 	//lungo X: 1,2,3 pixel
 	//lungo Y: 2,1,0 pixel
-	//avrò che lo spostamento del mouse è avvenuto prevalentemente lungo X (6 pixel), e solo marginalmente lungo Y (3 pixel), quindi
+	//avrò che lo spostamento del mouse è avvenuto prevalentemente lungo X (6 pixel), e meno lungo Y (3 pixel), quindi
 	//posso effettuare la rotazione lungo X, perché è probabilmente la direzione che vuole il giocatore.
-	//In assenza di questo meccanismo, con il primo click, avrei stabilito che lo spostamento era avvenuto lungo Y, il che però era
+	//In assenza di questo meccanismo, con il primo click, avrei stabilito che lo spostamento fosse avvenuto lungo Y, il che però è
 	//vero solo all'istante iniziale, e non è la reale intenzione del giocatore.
 	
+	//se lockX && lockY sono entrambi false, significa che ho appena iniziato a ruotare un cubo, devo allora impostare
+	//l'asse di rotazione in base al movimento del mouse.
 	if (GameState->getLockAroundXAxis() == false && GameState->getLockAroundYAxis() == false){
 
-		if (abs(deltaX) >= abs(deltaY))
-			GameState->setLockAroundYAxis(true);
-		else
-			GameState->setLockAroundXAxis(true);
+		
+		//verifico il timer: se è trascorso abbastanza tempo imposto il lock sulla base dei sommaDelta
+		if ((elapsedTime - GameState->getTimeSinceLock()) >= 0.5f){
+			//imposto il lock sulla base dei sommaDelta
+			//TODO REMOVE
+			if (GameState->getSumDeltaX() >= GameState->getSumDeltaY())
+				GameState->setLockAroundYAxis(true);
+			else
+				GameState->setLockAroundXAxis(true);
+
+
+
+		}
+		else{
+			//altrimenti accumulo i delta su sumDelta in gamestate
+			GameState->setSumDeltaX(GameState->getSumDeltaX() + abs(deltaX));
+			GameState->setSumDeltaY(GameState->getSumDeltaY() + abs(deltaY));
+		}
+
+		
 
 	}
 

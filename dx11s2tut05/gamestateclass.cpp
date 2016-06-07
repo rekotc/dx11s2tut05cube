@@ -40,6 +40,11 @@ bool GameStateClass::Initialize()
 
 	lockAroundXAxis = false;
 	lockAroundYAxis = false;
+	sumDeltaX = 0;
+	sumDeltaY = 0;
+
+	timeSinceLock = 0.0f;
+	timerIsActive = false;
 
 	return true;
 }
@@ -221,4 +226,41 @@ void  GameStateClass::setLockAroundYAxis(bool l){
 bool  GameStateClass::getLockAroundYAxis(){
 
 	return lockAroundYAxis;
+}
+
+void GameStateClass::setTimeSinceLock(float e){
+
+	timeSinceLock = e;
+}
+float GameStateClass::getTimeSinceLock(){
+
+	return timeSinceLock;
+}
+
+void GameStateClass::setTimerIsActive(bool b){
+
+	timerIsActive = b;
+}
+bool GameStateClass::getTimerIsActive(){
+
+	return timerIsActive;
+}
+
+void GameStateClass::setSumDeltaX(int i){
+
+	sumDeltaX = i;
+
+}
+int GameStateClass::getSumDeltaX(){
+
+	return sumDeltaX;
+}
+
+void GameStateClass::setSumDeltaY(int i){
+
+	sumDeltaY = i;
+}
+int GameStateClass::getSumDeltaY(){
+
+	return sumDeltaY;
 }

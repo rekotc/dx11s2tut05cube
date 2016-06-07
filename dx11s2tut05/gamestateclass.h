@@ -100,6 +100,19 @@ public:
 
 	void setLockAroundYAxis(bool);
 	bool getLockAroundYAxis();
+
+	void setTimeSinceLock(float);
+	float getTimeSinceLock();
+
+	void setTimerIsActive(bool);
+	bool getTimerIsActive();
+
+	void setSumDeltaX(int);
+	int getSumDeltaX();
+
+	void setSumDeltaY(int);
+	int getSumDeltaY();
+
 private:
 	//bool Render();
 
@@ -114,6 +127,8 @@ private:
 
 	bool lockAroundXAxis;
 	bool lockAroundYAxis;
+	float timeSinceLock;
+	int sumDeltaX, sumDeltaY;
 
 	int m_MouseHoverID;
 	int m_PreviousMouseHoverID;
@@ -123,6 +138,9 @@ private:
 	bool leftMouseButtonIsDragged;
 	bool leftMouseButtonWasReleased;
 	double m_tMinDistance;
+
+
+	bool timerIsActive;
 
 	bool consoleEnabled;
 

@@ -225,6 +225,8 @@ bool SystemClass::Frame()
 
 	// Update the system stats.
 	m_Timer->Frame();
+	//salvo lo stato dell'ultima
+	//m_GameState->setElapsedTimeSinceLock(m_Timer->GetTime());
 
 	m_FrameCounter++;
 
