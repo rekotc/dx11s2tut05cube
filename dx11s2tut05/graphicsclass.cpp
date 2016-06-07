@@ -659,7 +659,7 @@ void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter, Cons
 	//se lockX && lockY sono entrambi false, calcolo il delta.
 	//se deltaX > deltaY lockX = true, altrimenti lockY = true.
 
-	/*
+	
 	if (GameState->getLockAroundXAxis() == false && GameState->getLockAroundYAxis() == false){
 
 		if (abs(deltaX) >= abs(deltaY))
@@ -667,7 +667,7 @@ void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter, Cons
 		else
 			GameState->setLockAroundXAxis(true);
 
-	}*/
+	}
 
 
 	//switch lockX || lockY, proseguo direttamente a calcolare la rotazione sull'asse appropriato.
@@ -693,14 +693,14 @@ void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter, Cons
 
 			if (deltaY > 0){
 
-				angleAroundX = -0.0f;
+				angleAroundX = -0.1f;
 				cubeRotation *= XMMatrixRotationAxis(yaxisV, angleAroundX);
 			}
 			else
 				//muovo verso basso il mouse
 				if (deltaY < 0){
 
-					angleAroundX = 0.0f;
+					angleAroundX = 0.1f;
 					cubeRotation *= XMMatrixRotationAxis(yaxisV, angleAroundX);
 
 				}
@@ -723,7 +723,7 @@ void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter, Cons
 	m_ModelList->setVariableRotX(selectedID, rotX);
 	m_ModelList->setVariableRotY(selectedID, rotY);
 
-	console->appendMessage("variableRotY vale "+std::to_string(rotY));
+	//console->appendMessage("variableRotY vale "+std::to_string(rotY));
 
 	if (framecounter >= 1000){
 
@@ -807,7 +807,6 @@ void GraphicsClass::CompleteRotation(GameStateClass* gamestate, ModelListClass* 
 	float delta = 16 * XM_PI;
 	float temp;
 	float chosenAngle = 0.0f;
-	int sign;
 	//ROTAZIONE Y
 	//questo ciclo misura la differenza tra l'angolo rotY di rotazione corrente e tutti gli angoli fissi.
 	//alla fine del ciclo for, la variabile delta conterrà la minima differenza tra l'angolo rotY di rotazione corrente
@@ -821,7 +820,26 @@ void GraphicsClass::CompleteRotation(GameStateClass* gamestate, ModelListClass* 
 	}
 	
 	fixedRotY = (variableRotY >= 0) ? chosenAngle : -chosenAngle;
-	console->appendMessage("applico quindi una rotazione a scatto fisso di " + std::to_string(fixedRotY));
+	console->appendMessage("applico quindi una rotazione a scatto fisso attorno a Y di " + std::to_string(fixedRotY));
+
+	//ROTAZIONE SULL'ASSE X
+	console->appendMessage("variableRotX vale attualmente " + std::to_string(variableRotX));
+	delta = 16 * XM_PI;
+	chosenAngle = 0.0f;
+	//ROTAZIONE Y
+	//questo ciclo misura la differenza tra l'angolo rotY di rotazione corrente e tutti gli angoli fissi.
+	//alla fine del ciclo for, la variabile delta conterrà la minima differenza tra l'angolo rotY di rotazione corrente
+	//e l'angolo fisso contenuto in chosenAngle.
+	for (int i = 0; i < 5; i++){
+		temp = calculateDelta(variableRotX, angles[i]);
+		if (temp < delta){
+			delta = temp;
+			chosenAngle = angles[i];
+		}
+	}
+
+	fixedRotX = (variableRotX >= 0) ? chosenAngle : -chosenAngle;
+	console->appendMessage("applico quindi una rotazione a scatto fisso attorno a X di " + std::to_string(fixedRotX));
 
 	//la matrice fixedRotationMatrix va a sostituire la matrice di rotazione originale ogni qualvolta viene completata una rotazione
 	//la matrice fixedRotationMatrix viene quindi aggiornata volta per volta con lo "scatto fisso" di rotazione, e mantiene quindi
@@ -847,7 +865,7 @@ void GraphicsClass::CompleteRotation(GameStateClass* gamestate, ModelListClass* 
 	//totalRotX = (abs(totalRotX) >= XM_2PI) ? 0.0f : totalRotX;
 	//totalRotY = (abs(totalRotY) >= XM_2PI) ? 0.0f : totalRotY;
 
-	fixedRotX = 0.0f;
+	//fixedRotX = 0.0f;
 	//moltiplico la rotazione corrente per le matrici di rotazione degli angoli appena calcolati
 	CubeRotation *= XMMatrixRotationAxis(YaxisV, fixedRotY);
 	CubeRotation *= XMMatrixRotationAxis(XaxisV, fixedRotX);
@@ -858,8 +876,8 @@ void GraphicsClass::CompleteRotation(GameStateClass* gamestate, ModelListClass* 
 	modellist->setVariableRotY(gamestate->getMouseHoverID(),0.0f);
 	modellist->setVariableRotX(gamestate->getMouseHoverID(),0.0f);		
 
-	gamestate->setLockAroundXAxis(true);
-	gamestate->setLockAroundYAxis(true);
+	gamestate->setLockAroundXAxis(false);
+	gamestate->setLockAroundYAxis(false);
 }
 
 float GraphicsClass::calculateDelta(float rotation, float angleToCompare){

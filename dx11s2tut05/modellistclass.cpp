@@ -214,13 +214,13 @@ void ModelListClass::SetFixedRotation(int index, XMMATRIX r){
 }
 
 float ModelListClass::getVariableRotX(int index){
-	return m_ModelInfoList[index].fixedRotX;
+	return m_ModelInfoList[index].variableRotX;
 }
 float ModelListClass::getVariableRotY(int index){
-	return m_ModelInfoList[index].fixedRotY;
+	return m_ModelInfoList[index].variableRotY;
 }
 float ModelListClass::getVariableRotZ(int index){
-	return m_ModelInfoList[index].fixedRotZ;
+	return m_ModelInfoList[index].variableRotZ;
 }
 
 void ModelListClass::setVariableRotX(int index, float r){
