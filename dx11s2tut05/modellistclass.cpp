@@ -55,9 +55,20 @@ bool ModelListClass::Initialize(int numModels)
 		m_ModelInfoList[i].positionZ = ((((float)rand()-(float)rand())/RAND_MAX) * 10.0f) + 5.0f;
 		m_ModelInfoList[i].id = i;
 		m_ModelInfoList[i].rotationMatrix = XMMatrixIdentity();
-		m_ModelInfoList[i].rotX = 0.0f;
-		m_ModelInfoList[i].rotY = 0.0f;
-		m_ModelInfoList[i].rotZ = 0.0f;
+		m_ModelInfoList[i].fixedRotationMatrix = XMMatrixIdentity();
+
+		m_ModelInfoList[i].fixedRotX = 0.0f;
+		m_ModelInfoList[i].fixedRotY = 0.0f;
+		m_ModelInfoList[i].fixedRotZ = 0.0f;
+
+		m_ModelInfoList[i].variableRotX = 0.0f;
+		m_ModelInfoList[i].variableRotY = 0.0f;
+		m_ModelInfoList[i].variableRotZ = 0.0f;
+
+		m_ModelInfoList[i].Xaxis = "+x";
+		m_ModelInfoList[i].Yaxis = "+y";
+		m_ModelInfoList[i].Zaxis = "+z";
+
 	}
 
 	return true;
@@ -138,26 +149,86 @@ void ModelListClass::SetRotation(int index, XMMATRIX r){
 	m_ModelInfoList[index].rotationMatrix = r;
 }
 
-float ModelListClass::getRotX(int index){
-	return m_ModelInfoList[index].rotX;
+float ModelListClass::getFixedRotX(int index){
+	return m_ModelInfoList[index].fixedRotX;
 }
-float ModelListClass::getRotY(int index){
-	return m_ModelInfoList[index].rotY;
+float ModelListClass::getFixedRotY(int index){
+	return m_ModelInfoList[index].fixedRotY;
 }
-float ModelListClass::getRotZ(int index){
-	return m_ModelInfoList[index].rotZ;
+float ModelListClass::getFixedRotZ(int index){
+	return m_ModelInfoList[index].fixedRotZ;
 }
 
-void ModelListClass::setRotX(int index, float r){
-	m_ModelInfoList[index].rotX = r;
+void ModelListClass::setFixedRotX(int index, float r){
+	m_ModelInfoList[index].fixedRotX = r;
 }
-void ModelListClass::setRotY(int index, float r){
-	m_ModelInfoList[index].rotY = r;
+void ModelListClass::setFixedRotY(int index, float r){
+	m_ModelInfoList[index].fixedRotY = r;
 }
-void ModelListClass::setRotZ(int index, float r){
-	m_ModelInfoList[index].rotZ = r;
+void ModelListClass::setFixedRotZ(int index, float r){
+	m_ModelInfoList[index].fixedRotZ = r;
 }
 
 void ModelListClass::resetCubeRotation(int index){
 	m_ModelInfoList[index].rotationMatrix = XMMatrixIdentity();
+}
+
+//qui gestisco vettore di tutte le rotazioni di ogni oggetto
+void ModelListClass::appendRotationCode(int index, std::string s){
+	m_ModelInfoList[index].rotVector.push_back(s);
+}
+
+std::string ModelListClass::getRotationCode(int index, int i){
+
+	return m_ModelInfoList[index].rotVector[i];
+}
+
+
+
+void ModelListClass::appendRotX(int index, float r){
+	m_ModelInfoList[index].rotXVector.push_back(r);
+}
+float ModelListClass::getRotX(int index, int i){
+	return m_ModelInfoList[index].rotXVector[i];
+}
+void ModelListClass::appendRotY(int index, float r){
+	m_ModelInfoList[index].rotYVector.push_back(r);
+}
+float ModelListClass::getRotY(int index, int i){
+	return m_ModelInfoList[index].rotYVector[i];
+}
+void ModelListClass::appendRotZ(int index, float r){
+	m_ModelInfoList[index].rotZVector.push_back(r);
+}
+float ModelListClass::getRotZ(int index, int i){
+	return m_ModelInfoList[index].rotZVector[i];
+}
+
+XMMATRIX ModelListClass::GetFixedRotation(int index){
+
+	return m_ModelInfoList[index].fixedRotationMatrix;
+}
+void ModelListClass::SetFixedRotation(int index, XMMATRIX r){
+
+	m_ModelInfoList[index].fixedRotationMatrix = r;
+}
+
+float ModelListClass::getVariableRotX(int index){
+	return m_ModelInfoList[index].fixedRotX;
+}
+float ModelListClass::getVariableRotY(int index){
+	return m_ModelInfoList[index].fixedRotY;
+}
+float ModelListClass::getVariableRotZ(int index){
+	return m_ModelInfoList[index].fixedRotZ;
+}
+
+void ModelListClass::setVariableRotX(int index, float r){
+	m_ModelInfoList[index].variableRotX = r;
+}
+void ModelListClass::setVariableRotY(int index, float r){
+	m_ModelInfoList[index].variableRotY = r;
+}
+void ModelListClass::setVariableRotZ(int index, float r){
+	m_ModelInfoList[index].variableRotZ = r;
 }

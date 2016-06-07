@@ -95,6 +95,11 @@ public:
 	void setCubeIsBeingRotated(bool);
 	bool getCubeIsBeingRotated();
 
+	void setLockAroundXAxis(bool);
+	bool getLockAroundXAxis();
+
+	void setLockAroundYAxis(bool);
+	bool getLockAroundYAxis();
 private:
 	//bool Render();
 
@@ -107,6 +112,8 @@ private:
 	//controllare cosa serve
 	int m_SelectedId, m_LastSelectedId, m_HoverId, m_LastHoverId;
 
+	bool lockAroundXAxis;
+	bool lockAroundYAxis;
 
 	int m_MouseHoverID;
 	int m_PreviousMouseHoverID;

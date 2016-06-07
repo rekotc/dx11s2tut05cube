@@ -328,7 +328,7 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, ConsoleCl
 	//ruoto il cubo EVENTUALMENTE selezionato
 	//prima verifico se gamestate ha un cubo selezionato oppure no e se sto trascinando l'oggetto, se NO la funzione non viene chiamata
 	if (gamestate->getMouseHoverID() != -1 && gamestate->LeftMouseButtonIsDragged()==true)
-		RotateCube(gamestate,m_FrameCounter);
+		RotateCube(gamestate,m_FrameCounter,console);
 	// Render the graphics scene.
 	result = Render(gamestate,console);
 	if (!result)
@@ -632,7 +632,7 @@ bool GraphicsClass::RayAABBIntersect(bool debug, GameStateClass* gamestate, int 
 
 }
 
-void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter){
+void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter, ConsoleClass* console){
 
 
 	float angleAroundX = 0.0f;
@@ -656,8 +656,23 @@ void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter){
 	deltaX = m_mouseX - m_oldMouseX;
 	deltaY = m_mouseY - m_oldMouseY;
 
-	//se lo spostamento è maggiore lungo X, allora ruoto su asse Y
-	if (abs(deltaX) >= abs(deltaY)){
+	//se lockX && lockY sono entrambi false, calcolo il delta.
+	//se deltaX > deltaY lockX = true, altrimenti lockY = true.
+
+	/*
+	if (GameState->getLockAroundXAxis() == false && GameState->getLockAroundYAxis() == false){
+
+		if (abs(deltaX) >= abs(deltaY))
+			GameState->setLockAroundYAxis(true);
+		else
+			GameState->setLockAroundXAxis(true);
+
+	}*/
+
+
+	//switch lockX || lockY, proseguo direttamente a calcolare la rotazione sull'asse appropriato.
+
+	if (GameState->getLockAroundYAxis() == true){
 
 		//muovo verso dx il mouse
 		if (deltaX > 0){
@@ -671,40 +686,44 @@ void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter){
 				angleAroundY = 0.1f;
 				cubeRotation *= XMMatrixRotationAxis(axisV, angleAroundY);
 			}
-
 	}
-	else{
+	
 
-		//muovo verso alto il mouse
-		if (deltaY > 0){
+	if (GameState->getLockAroundXAxis() == true){
 
-			angleAroundX = -0.1f;
-			cubeRotation *= XMMatrixRotationAxis(yaxisV, angleAroundX);
-		}
-		else
-			//muovo verso basso il mouse
-			if (deltaY < 0){
+			if (deltaY > 0){
 
-				angleAroundX = 0.1f;
+				angleAroundX = -0.0f;
 				cubeRotation *= XMMatrixRotationAxis(yaxisV, angleAroundX);
-
 			}
+			else
+				//muovo verso basso il mouse
+				if (deltaY < 0){
+
+					angleAroundX = 0.0f;
+					cubeRotation *= XMMatrixRotationAxis(yaxisV, angleAroundX);
+
+				}
 	}
+	
+	//nella funzione completeRotation devono essere settati a false entrambi i lock.	
 
-
-	//aggiorno la rotazione sul singolo modello
+	//aggiorno la matrice di rotazione sul singolo modello
 	m_ModelList->SetRotation(selectedID, cubeRotation);
 
-	float rotX = m_ModelList->getRotX(selectedID) + angleAroundX;
-	float rotY = m_ModelList->getRotY(selectedID) + angleAroundY;
+	float rotX = m_ModelList->getVariableRotX(selectedID) + angleAroundX;
+	float rotY = m_ModelList->getVariableRotY(selectedID) + angleAroundY;
 
 	//devo impedire che l'angolo di rotazione cresca oltre 2pigreco, infatti una rotazione di 2pigreco corrisponde a ZERO gradi
 	rotX = (abs(rotX) >= XM_2PI) ? 0.0f : rotX;
 	rotY = (abs(rotY) >= XM_2PI) ? 0.0f : rotY;
 
-	m_ModelList->setRotX(selectedID, rotX);
-	m_ModelList->setRotY(selectedID, rotY);
+	//console->appendMessage("Rotazione del cubo " + std::to_string(rotX) + " " + std::to_string(rotY));
+	
+	m_ModelList->setVariableRotX(selectedID, rotX);
+	m_ModelList->setVariableRotY(selectedID, rotY);
 
+	console->appendMessage("variableRotY vale "+std::to_string(rotY));
 
 	if (framecounter >= 1000){
 
@@ -766,51 +785,85 @@ void GraphicsClass::resetSelection(GameStateClass* gamestate, ModelListClass* mo
 void GraphicsClass::CompleteRotation(GameStateClass* gamestate, ModelListClass* modellist, ConsoleClass* console){
 
 
-	XMMATRIX CubeRotation = modellist->GetRotation(gamestate->getMouseHoverID());
+	//acquisisco la matrice di rotazione FISSA, che contiene lo stato complessivo delle rotazione FISSE
+	//del cubo attualmente selezionato.
+	XMMATRIX CubeRotation = modellist->GetFixedRotation(gamestate->getMouseHoverID());
 	//cuberotation
 	XMFLOAT4X4 fCubeRotation;
 	XMStoreFloat4x4(&fCubeRotation, CubeRotation);
 	//console->appendMessage("");
 
-	float rotY = modellist->getRotY(gamestate->getMouseHoverID());
-	float rotX = modellist->getRotX(gamestate->getMouseHoverID());
+	float variableRotY = modellist->getVariableRotY(gamestate->getMouseHoverID());
+	float variableRotX = modellist->getVariableRotX(gamestate->getMouseHoverID());
 	
+	float fixedRotY, fixedRotX;
+
 	//Roba vecchia, controllare
+
+	console->appendMessage("variableRotY vale attualmente "+std::to_string(variableRotY));
 
 	float angles[5] = { 0.0f, XM_PIDIV2, XM_PI, 1.5f*XM_PI, XM_2PI };
 	//valore arbitrario ma più grande dei valori ottenibili con calculateDelta();
-	float delta = 4 * XM_PI;
+	float delta = 16 * XM_PI;
 	float temp;
 	float chosenAngle = 0.0f;
-	float extraRot = 0.0f;
-	
+	int sign;
 	//ROTAZIONE Y
+	//questo ciclo misura la differenza tra l'angolo rotY di rotazione corrente e tutti gli angoli fissi.
+	//alla fine del ciclo for, la variabile delta conterrà la minima differenza tra l'angolo rotY di rotazione corrente
+	//e l'angolo fisso contenuto in chosenAngle.
 	for (int i = 0; i < 5; i++){
-
-		temp = calculateDelta(rotY, angles[i]);
-
+		temp = calculateDelta(variableRotY, angles[i]);
 		if (temp < delta){
 			delta = temp;
 			chosenAngle = angles[i];
 		}
-
 	}
-	rotY = (rotY >= 0) ? chosenAngle : -chosenAngle;
-	int test = 56;
-
-	XMFLOAT3 axisF = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	XMVECTOR axisV = XMLoadFloat3(&axisF);
-	XMMATRIX cubeRotation = XMMatrixIdentity();
-	cubeRotation *= XMMatrixRotationAxis(axisV, rotY);
-	modellist->SetRotation(gamestate->getMouseHoverID(),cubeRotation);
-	modellist->setRotY(gamestate->getMouseHoverID(),rotY);
 	
+	fixedRotY = (variableRotY >= 0) ? chosenAngle : -chosenAngle;
+	console->appendMessage("applico quindi una rotazione a scatto fisso di " + std::to_string(fixedRotY));
+
+	//la matrice fixedRotationMatrix va a sostituire la matrice di rotazione originale ogni qualvolta viene completata una rotazione
+	//la matrice fixedRotationMatrix viene quindi aggiornata volta per volta con lo "scatto fisso" di rotazione, e mantiene quindi
+	//correttamente lo stato corrente del cubo, inclusivo di tutte le rotazioni a "scatto fisso" precedenti.
+
+	//calcolo l'ulteriore rotazione a "scatto fisso" e la applico a fixedRotationMatrix, che poi andrà a sostituire la matrice originale.
+
+	XMFLOAT3 YaxisF = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	XMVECTOR YaxisV = XMLoadFloat3(&YaxisF);
+	XMFLOAT3 XaxisF = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	XMVECTOR XaxisV = XMLoadFloat3(&XaxisF);
+	//XMMATRIX cubeRotation = XMMatrixIdentity();	
+
+	//cubeRotation *= XMMatrixRotationAxis(YaxisV, rotY);
+	//cubeRotation *= XMMatrixRotationAxis(XaxisV, rotX);
+
+	//rotY = +0.3f;
+	//rotX = +0.0f;
+	//aggiorno le rotazioni globali
+	//totalRotY += currentRotY;
+	//totalRotX += currentRotX;
+	//devo impedire che l'angolo di rotazione cresca oltre 2pigreco, infatti una rotazione di 2pigreco corrisponde a ZERO gradi
+	//totalRotX = (abs(totalRotX) >= XM_2PI) ? 0.0f : totalRotX;
+	//totalRotY = (abs(totalRotY) >= XM_2PI) ? 0.0f : totalRotY;
+
+	fixedRotX = 0.0f;
+	//moltiplico la rotazione corrente per le matrici di rotazione degli angoli appena calcolati
+	CubeRotation *= XMMatrixRotationAxis(YaxisV, fixedRotY);
+	CubeRotation *= XMMatrixRotationAxis(XaxisV, fixedRotX);
+	//aggiorno la matrice di rotazione del cubo, sostituendo alla matrice corrente quella relativa alla rotazione FISSA
+	modellist->SetRotation(gamestate->getMouseHoverID(),CubeRotation);
+	modellist->SetFixedRotation(gamestate->getMouseHoverID(), CubeRotation);
+
+	modellist->setVariableRotY(gamestate->getMouseHoverID(),0.0f);
+	modellist->setVariableRotX(gamestate->getMouseHoverID(),0.0f);		
+
+	gamestate->setLockAroundXAxis(true);
+	gamestate->setLockAroundYAxis(true);
 }
 
-float GraphicsClass::calculateDelta(float r, float a){
+float GraphicsClass::calculateDelta(float rotation, float angleToCompare){
 
-	float angle = a;
-	float delta = angle - abs(r);
+	return abs(angleToCompare - abs(rotation));
 
-	return abs(delta);
 }

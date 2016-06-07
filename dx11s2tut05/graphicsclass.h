@@ -49,7 +49,7 @@ private:
 	void TestIntersection(GameStateClass*);
 	bool RayAABBIntersect(bool, GameStateClass*, int, XMVECTOR , XMVECTOR, AabbClass*);
 	void UpdateCubeColors(GameStateClass*);
-	void RotateCube(GameStateClass*, int);
+	void RotateCube(GameStateClass*, int, ConsoleClass*);
 
 	static void CompleteRotation(GameStateClass*, ModelListClass*, ConsoleClass*);
 	static float calculateDelta(float, float);

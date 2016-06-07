@@ -38,6 +38,9 @@ bool GameStateClass::Initialize()
 	lock = false;
 	consoleEnabled = false;
 
+	lockAroundXAxis = false;
+	lockAroundYAxis = false;
+
 	return true;
 }
 
@@ -198,4 +201,24 @@ void GameStateClass::setCubeIsBeingRotated(bool c){
 bool GameStateClass::getCubeIsBeingRotated(){
 
 	return m_CubeIsBeingRotated;
+}
+
+
+void  GameStateClass::setLockAroundXAxis(bool l){
+
+	lockAroundXAxis = l;
+}
+
+bool  GameStateClass::getLockAroundXAxis(){
+
+	return lockAroundXAxis;
+}
+
+void  GameStateClass::setLockAroundYAxis(bool l){
+
+	lockAroundYAxis = l;
+}
+bool  GameStateClass::getLockAroundYAxis(){
+
+	return lockAroundYAxis;
 }

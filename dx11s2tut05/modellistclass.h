@@ -8,7 +8,9 @@
 //////////////
 // INCLUDES //
 //////////////
+#include <vector>
 #include <directxmath.h>
+#include <string>
 #include <stdlib.h>
 #include <time.h>
 using namespace DirectX;
@@ -24,7 +26,17 @@ private:
 		XMFLOAT4 color;
 		float positionX, positionY, positionZ;
 		XMMATRIX rotationMatrix;
-		float rotX, rotY, rotZ;
+		XMMATRIX fixedRotationMatrix;
+		float fixedRotX, fixedRotY, fixedRotZ;
+		float variableRotX, variableRotY, variableRotZ;
+
+		std::vector<std::string> rotVector;
+
+		std::vector<float> rotXVector;
+		std::vector<float> rotYVector;
+		std::vector<float> rotZVector;
+
+		std::string Xaxis, Yaxis, Zaxis;
 		int id;
 	};
 
@@ -45,16 +57,40 @@ public:
 
 	XMFLOAT4 GetColor(int);
 
-	float getRotX(int);
-	float getRotY(int);
-	float getRotZ(int);
+	float getFixedRotX(int);
+	float getFixedRotY(int);
+	float getFixedRotZ(int);
 
-    void setRotX(int, float);
-	void setRotY(int, float);
-	void setRotZ(int, float);
+    void setFixedRotX(int, float);
+	void setFixedRotY(int, float);
+	void setFixedRotZ(int, float);
+
+	float getVariableRotX(int);
+	float getVariableRotY(int);
+	float getVariableRotZ(int);
+
+	void setVariableRotX(int, float);
+	void setVariableRotY(int, float);
+	void setVariableRotZ(int, float);
+
+	//void getAxisAligned
+
+	void appendRotationCode(int, std::string);
+	std::string getRotationCode(int, int);
+
+	void appendRotX(int, float);
+	float getRotX(int, int);
+	void appendRotY(int, float);
+	float getRotY(int, int);
+	void appendRotZ(int, float);
+	float getRotZ(int, int);
 
 	XMMATRIX GetRotation(int);
 	void SetRotation(int,XMMATRIX);
+
+	XMMATRIX GetFixedRotation(int);
+	void SetFixedRotation(int, XMMATRIX);
+
 	//AabbClass getBoundingBox(int);
 	//void setBoundingBox(int, AabbClass);
 	void updateBoundingBoxPos(XMFLOAT3);
