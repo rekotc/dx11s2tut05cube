@@ -289,7 +289,7 @@ void GraphicsClass::Shutdown()
 }
 
 
-bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, ConsoleClass* console)
+bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, float time, ConsoleClass* console)
 {
 	bool result;
 	m_FrameCounter = framecounter;
@@ -328,7 +328,7 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, ConsoleCl
 	//ruoto il cubo EVENTUALMENTE selezionato
 	//prima verifico se gamestate ha un cubo selezionato oppure no e se sto trascinando l'oggetto, se NO la funzione non viene chiamata
 	if (gamestate->getMouseHoverID() != -1 && gamestate->LeftMouseButtonIsDragged()==true)
-		RotateCube(gamestate,m_FrameCounter,console);
+		RotateCube(gamestate,m_FrameCounter,time,console);
 	// Render the graphics scene.
 	result = Render(gamestate,console);
 	if (!result)
@@ -632,7 +632,7 @@ bool GraphicsClass::RayAABBIntersect(bool debug, GameStateClass* gamestate, int 
 
 }
 
-void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter, ConsoleClass* console){
+void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter, float elapsedTime, ConsoleClass* console){
 
 
 	float angleAroundX = 0.0f;
@@ -658,7 +658,18 @@ void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter, Cons
 
 	//se lockX && lockY sono entrambi false, calcolo il delta.
 	//se deltaX > deltaY lockX = true, altrimenti lockY = true.
-
+		
+	//l'idea di base è di sommare i delta X e Y in un brevissimo intervallo di tempo, e prendere come direzione di
+	//rotazione quella che ha come somma dei delta il valore maggiore.
+	//Quindi, fintanto che questo tempo non è passato, vado a sommare, per ogni frame, i relativi delta, e poi, ad esaurimento
+	//del timer, valuto la situazione.
+	//se infatti nei, poniamo, 3 fotogrammi successivi, il delta sarà:
+	//lungo X: 1,2,3 pixel
+	//lungo Y: 2,1,0 pixel
+	//avrò che lo spostamento del mouse è avvenuto prevalentemente lungo X (6 pixel), e solo marginalmente lungo Y (3 pixel), quindi
+	//posso effettuare la rotazione lungo X, perché è probabilmente la direzione che vuole il giocatore.
+	//In assenza di questo meccanismo, con il primo click, avrei stabilito che lo spostamento era avvenuto lungo Y, il che però era
+	//vero solo all'istante iniziale, e non è la reale intenzione del giocatore.
 	
 	if (GameState->getLockAroundXAxis() == false && GameState->getLockAroundYAxis() == false){
 

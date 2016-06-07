@@ -42,14 +42,14 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame(GameStateClass*, int, ConsoleClass*);
+	bool Frame(GameStateClass*, int, float, ConsoleClass*);
 
 private:
 	bool Render(GameStateClass*, ConsoleClass*);
 	void TestIntersection(GameStateClass*);
 	bool RayAABBIntersect(bool, GameStateClass*, int, XMVECTOR , XMVECTOR, AabbClass*);
 	void UpdateCubeColors(GameStateClass*);
-	void RotateCube(GameStateClass*, int, ConsoleClass*);
+	void RotateCube(GameStateClass*, int, float, ConsoleClass*);
 
 	static void CompleteRotation(GameStateClass*, ModelListClass*, ConsoleClass*);
 	static float calculateDelta(float, float);

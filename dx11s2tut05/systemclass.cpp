@@ -11,6 +11,8 @@ SystemClass::SystemClass()
 	m_GameLogic = 0;
 	m_GameState = 0;
 	m_Console = 0;
+
+	m_Timer = 0;
 	
 }
 
@@ -100,6 +102,20 @@ bool SystemClass::Initialize()
 		return false;
 	}
 
+	// Create the timer object.
+	m_Timer = new TimerClass;
+	if (!m_Timer)
+	{
+		return false;
+	}
+
+	// Initialize the timer object.
+	result = m_Timer->Initialize();
+	if (!result)
+	{
+		MessageBox(m_hwnd, L"Could not initialize the Timer object.", L"Error", MB_OK);
+		return false;
+	}
 	
 
 	
@@ -109,6 +125,13 @@ bool SystemClass::Initialize()
 
 void SystemClass::Shutdown()
 {
+	// Release the timer object.
+	if (m_Timer)
+	{
+		delete m_Timer;
+		m_Timer = 0;
+	}
+
 	// Release the graphics object.
 	if(m_Graphics)
 	{
@@ -200,6 +223,9 @@ bool SystemClass::Frame()
 	// Get the location of the mouse from the input object,
 	//m_Input->GetMouseLocation(mouseX, mouseY);
 
+	// Update the system stats.
+	m_Timer->Frame();
+
 	m_FrameCounter++;
 
 	if (m_FrameCounter == 500){
@@ -222,7 +248,7 @@ bool SystemClass::Frame()
 	}
 
 	// Do the frame processing for the graphics object.
-	result = m_Graphics->Frame(m_GameState, m_FrameCounter, m_Console);
+	result = m_Graphics->Frame(m_GameState, m_FrameCounter, m_Timer->GetTime(), m_Console);
 	if(!result)
 	{
 		return false;

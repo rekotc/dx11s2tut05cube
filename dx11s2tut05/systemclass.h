@@ -26,6 +26,7 @@
 #include "gamelogicclass.h"
 #include "gamestateclass.h"
 #include "consoleclass.h"
+#include "timerclass.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,6 +62,7 @@ private:
 	GameLogicClass* m_GameLogic;
 	GameStateClass* m_GameState;
 	ConsoleClass* m_Console;
+	TimerClass* m_Timer;
 };
 
 
