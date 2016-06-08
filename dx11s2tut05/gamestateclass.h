@@ -107,12 +107,15 @@ public:
 	void setTimerIsActive(bool);
 	bool getTimerIsActive();
 
-	void setSumDeltaX(int);
+	void addSumDeltaX(int);
 	int getSumDeltaX();
 
-	void setSumDeltaY(int);
+	void addSumDeltaY(int);
 	int getSumDeltaY();
 
+	void resetSumDeltaX();
+	void resetSumDeltaY();
+	
 private:
 	//bool Render();
 

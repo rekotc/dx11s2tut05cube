@@ -294,7 +294,7 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, float tim
 	bool result;
 	m_FrameCounter = framecounter;
 	
-	
+	/*
 
 	if (m_FrameCounter == 500){
 
@@ -304,7 +304,7 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, float tim
 		//test, il lock è true se ho rilasciato la selezione sul cubo
 		if (gamestate->getLock()==true){
 			int pirla = 34;
-		}
+		}*/
 		//verifico l'intersezione, a meno che non stia già trascinando un cubo
 		if (gamestate->LeftMouseButtonIsDragged() == false){
 
@@ -318,12 +318,11 @@ bool GraphicsClass::Frame(GameStateClass* gamestate, int framecounter, float tim
 				CompleteRotation(gamestate, m_ModelList, console);
 				gamestate->setCubeIsBeingRotated(false);
 				//resetto i sumDelta
-				gamestate->setSumDeltaX(0);
-				gamestate->setSumDeltaY(0);
+				gamestate->resetSumDeltaX();
+				gamestate->resetSumDeltaY();
 				//setto a OFF il timer
 				gamestate->setTimerIsActive(false);
-				//TODO reset
-					}
+			}
 			//verifico nuove intersezioni
 			TestIntersection(gamestate);
 			//aggiorno il colore del cubo in base all'EVENTUALE intersezione trovata.
@@ -692,21 +691,19 @@ void GraphicsClass::RotateCube(GameStateClass* GameState, int framecounter, floa
 
 		
 		//verifico il timer: se è trascorso abbastanza tempo imposto il lock sulla base dei sommaDelta
-		if ((elapsedTime - GameState->getTimeSinceLock()) >= 0.5f){
+		if ((elapsedTime - GameState->getTimeSinceLock()) >= 0.3f){
 			//imposto il lock sulla base dei sommaDelta
-			//TODO REMOVE
-			if (GameState->getSumDeltaX() >= GameState->getSumDeltaY())
+			if (GameState->getSumDeltaX() > GameState->getSumDeltaY())
 				GameState->setLockAroundYAxis(true);
 			else
-				GameState->setLockAroundXAxis(true);
-
-
-
+				if (GameState->getSumDeltaX() < GameState->getSumDeltaY())
+					GameState->setLockAroundXAxis(true);
 		}
+		//altrimenti accumulo i delta su sumDelta in gamestate
 		else{
-			//altrimenti accumulo i delta su sumDelta in gamestate
-			GameState->setSumDeltaX(GameState->getSumDeltaX() + abs(deltaX));
-			GameState->setSumDeltaY(GameState->getSumDeltaY() + abs(deltaY));
+			
+			GameState->addSumDeltaX(abs(deltaX));
+			GameState->addSumDeltaY(abs(deltaY));
 		}
 
 		

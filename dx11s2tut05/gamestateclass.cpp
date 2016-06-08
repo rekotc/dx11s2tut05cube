@@ -20,7 +20,11 @@ GameStateClass::~GameStateClass()
 bool GameStateClass::Initialize()
 {
 	m_tMinDistance = 999999999;
-	m_mouseX, m_mouseY, m_oldMouseX, m_oldMouseY = -1;
+	m_mouseX = -1;
+	m_mouseY = -1;
+	m_oldMouseX = -1;
+	m_oldMouseY = -1;
+
 	m_SelectedId = -1;
 
 	leftMouseButtonIsClicked = false;
@@ -246,9 +250,9 @@ bool GameStateClass::getTimerIsActive(){
 	return timerIsActive;
 }
 
-void GameStateClass::setSumDeltaX(int i){
+void GameStateClass::addSumDeltaX(int i){
 
-	sumDeltaX = i;
+	sumDeltaX = sumDeltaX + i;
 
 }
 int GameStateClass::getSumDeltaX(){
@@ -256,11 +260,19 @@ int GameStateClass::getSumDeltaX(){
 	return sumDeltaX;
 }
 
-void GameStateClass::setSumDeltaY(int i){
+void GameStateClass::addSumDeltaY(int i){
 
-	sumDeltaY = i;
+	sumDeltaY = sumDeltaY + i;
 }
 int GameStateClass::getSumDeltaY(){
 
 	return sumDeltaY;
+
+}
+
+void GameStateClass::resetSumDeltaX(){
+	sumDeltaX = 0.0f;
+}
+void GameStateClass::resetSumDeltaY(){
+	sumDeltaY = 0.0f;
 }

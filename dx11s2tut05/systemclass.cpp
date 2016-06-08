@@ -292,9 +292,13 @@ LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam
 			return 0;
 		}
 
-		case WM_INPUT:                          // mouse data in
+		case WM_INPUT:                       
+			m_GameState->setOldMousePos(m_Input->getCursorPosX(),m_Input->getCursorPosY());
+			// mouse data in
+			m_Input->readCursorPos(hwnd);			
+			m_GameState->setCurrentMousePos(m_Input->getCursorPosX(), m_Input->getCursorPosY());
 
-			m_Input->readCursorPos(hwnd);
+
 
 			return 0;
 		// Any other messages send to the default message handler as our application won't make use of them.
